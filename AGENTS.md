@@ -608,7 +608,7 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   （140,387,455 bytes，SHA-256 `1F9EECA14F0141B5361356D9EBC6561D4F1BDB0D6ED1A8C591A2231EFCFD991C`）。
   解包校验：Hermes bundle 含 `DSH Remote Agent`/`workspace_relative_path`/`cover_relative_path`/
   `video/mp4`/`chat-videos`，`classes3.dex` 含 `expo-video`/`ExpoVideo`/`expo.modules.video`。
-- 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、26 文件 / 146 测试、
+- 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、27 文件 / 148 测试、
   `expo config --type prebuild` 与 Hermes bundle 导出通过；新增视频结果投影、分块传输与
   session projections 用量解析测试。
 - 真机首测发现视频播放报“视频文件不在会话工作区中”：client-core 的 `RemoteTypertGateway`
@@ -631,6 +631,10 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   与 60% 压缩阈值、输出上限、工具面裁剪、GPU 串行、llama.cpp 参数核对）。
 - 真机确认（2026-10-19）：指标 OTA `01a1505d-…` 已应用，会话标题下方指标行与“对话信息”
   用量区块显示正常（上下文占用 / 缓存命中 / 权限等级）。
+- 空闲断线恢复：非主动断线按 2s→5s→10s→20s→30s 退避自动重连并持续重试；每 15s 检查
+  控制心跳，超过 `max(90s, 4×interval)` 判定半开并主动重建；重连窗口内保持前台服务，
+  显式断开/认证失败才停止。新增 `src/state/reconnect-policy.ts` 与 2 个策略测试。OTA
+  `05d48ccf-e18d-4f96-9366-651b3e53ec04`（id `01a15076-1ee8-7cb7-b9f5-04e049556c28`）。
 - 布局修正：指标行移出标题模糊层到输入框正上方，改为实心胶囊条（`surfaceStrong` + 边框），
   避免浮层文字重叠；标题模糊层为系统状态栏 inset 补 `surface` 实心底色。OTA
   `b5fb2240-0a3f-4fde-a83e-8f693e146270`（id `01a15067-07c5-746a-9b54-288c8a69efd1`）。

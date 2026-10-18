@@ -15,6 +15,7 @@ import { serverSession } from '../services/server-session'
 import { saveLastConnectedDeviceId } from '../services/storage'
 import type { RemoteSession, WorkspaceView } from '../types'
 import { loadSavedCodexPermissions, withBestCodexPermission } from './codex-session-state'
+import { autoReconnectDelayMs, heartbeatIsStale } from './reconnect-policy'
 import type { SessionAccess } from './session-runtime'
 import type { AppState } from './store-state'
 import { disconnected } from './store-state'
@@ -22,10 +23,80 @@ import { disconnected } from './store-state'
 /** Connection actions use the store's single connection/session runtime. */
 export function createConnectionActions({ get, set, runtime }: SessionAccess): Pick<AppState,
   'connectDevice' | 'reconnect' | 'refreshConnectionNetworkDetails' | 'disconnect' | 'setOffline'> {
+  let watchdogTimer: ReturnType<typeof setInterval> | undefined
+  let reconnectTimer: ReturnType<typeof setTimeout> | undefined
+  let reconnectAttempt = 0
+
+  const stopWatchdog = (): void => {
+    if (watchdogTimer === undefined) return
+    clearInterval(watchdogTimer)
+    watchdogTimer = undefined
+  }
+
+  const stopReconnectTimer = (): void => {
+    if (reconnectTimer === undefined) return
+    clearTimeout(reconnectTimer)
+    reconnectTimer = undefined
+  }
+
+  /**
+   * Retry an unexpected carrier loss until it recovers or the user explicitly
+   * disconnects. The backoff saturates at 30s, so a long screen-off/Doze gap or
+   * an idle hotspot drop heals without requiring the user to tap reconnect.
+   * Deliberate disconnects, auth failures and navigation to re-auth stop it.
+   */
+  const scheduleAutoReconnect = (): void => {
+    if (reconnectTimer !== undefined) return
+    if (get().selectedDevice === undefined || get().reauthRequired) return
+    const delay = autoReconnectDelayMs(reconnectAttempt)
+    reconnectAttempt += 1
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = undefined
+      const current = get()
+      if (current.selectedDevice === undefined || current.reauthRequired || current.connection.phase !== 'offline') return
+      void current.reconnect({ restoreSession: true }).then(ok => {
+        if (!ok) scheduleAutoReconnect()
+      })
+    }, delay)
+  }
+
+  /**
+   * The Worker pings every 25s and closes a peer after 75s of silence. When the
+   * socket object is still OPEN but the JS thread was suspended (Doze / MIUI
+   * background freeze), no close event arrives; this watchdog detects the stale
+   * control stream and rebuilds the carrier instead of waiting for the next tap.
+   */
+  const startWatchdog = (generation: number): void => {
+    stopWatchdog()
+    watchdogTimer = setInterval(() => {
+      if (generation !== runtime.connectionGeneration) return
+      if (get().connection.phase !== 'connected') return
+      void runtime.connection.getNetworkDetails().then(details => {
+        if (generation !== runtime.connectionGeneration) return
+        if (get().connection.phase !== 'connected') return
+        if (!heartbeatIsStale(details?.lastControlReceivedAt, Date.now(), details?.heartbeatIntervalMs)) return
+        stopWatchdog()
+        ++runtime.connectionGeneration
+        ++runtime.sessionLoadGeneration
+        void runtime.connection.close().finally(() => {
+          runtime.clearPendingMuxFrames()
+          runtime.clearQueueAdoption()
+          set({
+            connection: { phase: 'offline', stats: { mode: 'Disconnected', connected: false }, error: zhCN.runtime.connectionLost },
+            busyAction: undefined,
+          })
+          scheduleAutoReconnect()
+        })
+      }).catch(() => undefined)
+    }, 15_000)
+  }
+
   return {
     async connectDevice(device, options = {}) {
       const { config, identity } = get()
       if (config === undefined || identity === undefined) return false
+      stopWatchdog()
+      stopReconnectTimer()
       const generation = ++runtime.connectionGeneration
       ++runtime.sessionLoadGeneration
       const sameHost = get().selectedDevice?.deviceId === device.deviceId
@@ -101,6 +172,7 @@ export function createConnectionActions({ get, set, runtime }: SessionAccess): P
             },
             onClose: () => {
               if (generation !== runtime.connectionGeneration) return
+              stopWatchdog()
               // Drop local stream handles so reconnect opens a fresh stream.
               void runtime.closeActiveCodexStream(false)
               void runtime.closeActiveCursorStream(false)
@@ -108,7 +180,7 @@ export function createConnectionActions({ get, set, runtime }: SessionAccess): P
                 ++runtime.connectionGeneration
                 ++runtime.sessionLoadGeneration
                 set({
-                  connection: { phase: 'offline', stats: { mode: 'Disconnected', connected: false }, error: zhCN.runtime.hostClosed },
+                  connection: { phase: 'offline', stats: { mode: 'Disconnected', connected: false }, error: zhCN.runtime.connectionLost },
                   codexAvailable: false,
                   cursorAvailable: false,
                   antigravityAvailable: false,
@@ -117,6 +189,7 @@ export function createConnectionActions({ get, set, runtime }: SessionAccess): P
                   claudeAvailable: false,
                   busyAction: undefined,
                 })
+                scheduleAutoReconnect()
               }
             },
           },
@@ -211,10 +284,15 @@ export function createConnectionActions({ get, set, runtime }: SessionAccess): P
           }
         })
         runtime.connectionStartedAt = Date.now()
+        reconnectAttempt = 0
+        stopReconnectTimer()
+        startWatchdog(generation)
         await saveLastConnectedDeviceId(device.deviceId)
         return true
       } catch (error) {
         if (generation !== runtime.connectionGeneration) return false
+        stopWatchdog()
+        stopReconnectTimer()
         await runtime.connection.close()
         if (isSessionAuthError(error)) {
           await get().requireReauth(friendlyError(error))
@@ -236,6 +314,7 @@ export function createConnectionActions({ get, set, runtime }: SessionAccess): P
     },
 
     reconnect(options = {}) {
+      stopReconnectTimer()
       if (runtime.reconnectFlight !== undefined) return runtime.reconnectFlight
       const device = get().selectedDevice
       const phase = get().connection.phase
@@ -264,6 +343,9 @@ export function createConnectionActions({ get, set, runtime }: SessionAccess): P
     },
 
     async disconnect() {
+      stopWatchdog()
+      stopReconnectTimer()
+      reconnectAttempt = 0
       runtime.flushPendingMuxFrames()
       ++runtime.connectionGeneration
       ++runtime.sessionLoadGeneration

@@ -21,7 +21,10 @@ export class AndroidRemoteRuntime {
       await this.client.connect(baseUrl, identity, host, accessToken, onFrame, {
         ...options,
         onClose: () => {
-          void this.stopForeground()
+          // Keep the foreground service alive across an unexpected carrier
+          // close: Android can otherwise freeze/kill the JS process before the
+          // store's automatic reconnect timer gets a chance to run. Explicit
+          // close()/disconnect() and connect failures stop it instead.
           options.onClose?.()
         },
       })
