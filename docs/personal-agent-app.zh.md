@@ -186,6 +186,36 @@ Android 会话现在可以显示并播放 Host 生成的视频结果：
 3. 历史记录只显示卡片，不会自动下载视频；缓存文件以会话 + 路径 + 文件版本为键，文件变化会重新拉取。
 4. 若 Host 未传 `workspace_dir`（旧 MCP 或旧会话），结果只显示文本/封面，不显示可播放卡片；MCP schema 变更需要新的 DSH 会话才会生效。
 
+## 会话用量与本地 Saluki 优化（v0.7.0 增量）
+
+Android 会话标题下方新增一行紧凑指标，数据全部来自 Host 官方 session projections（token-meter），随每一步实时更新：
+
+- **上下文占用**：`contextPressure.projectedTokens`（下一次请求的 prompt 估算，缺失时回落到 `pressureTokens`）/ `contextWindow`；达到 85% 时变为警示色。
+- **缓存命中**：`cacheReadTokens / (uncachedInputTokens + cacheReadTokens + cacheWriteTokens)`；provider 不上报缓存（部分本地 llama.cpp 版本）时隐藏该指标，不展示虚假的 0%。
+- **权限等级**：`permissions.currentValue` 映射为只读 / 工作区写入 / 完全访问；完全访问使用警示色。
+- 点击指标打开“对话信息”，可查看上下文构成（系统 / 工具 / 消息）、Token 用量、累计与本轮缓存命中、权限等级、沙箱/审批（Host 上报时）以及当前模型。
+
+对应 OTA：group `a8174995-e74d-4436-8a96-79e1cf430cd2`，id `01a1505d-8f1d-71a7-aa74-dfa34238b638`（runtime `0.7.0`，JS-only）；Android check 与 26 文件 / 146 测试通过。
+
+### 当前本机 Saluki 配置
+
+来自 `~/.dsh/profiles/desktop/cordis.patch.yml`：
+
+- provider `local-saluki`：llama.cpp OpenAI 兼容端点 `http://127.0.0.1:18080/v1`，模型 `underdog-saluki-27b`，`contextWindow: 131072`，`maxTokens: 16384`，`reasoningEfforts: off/high`。
+- `compaction-basic` 自动压缩：`thresholdRatio: 0.6`、`headroomTokens: 8192`、`retainTokens: 8192`、`maxTokens: 16384`。
+- 当前会话（写作时）实际使用 `deepseek-account/deepseek-flash`；权限 `danger-full-access`（完全访问，审批 `never`）。切到本地 Saluki 后权限策略照常由 per-session 权限控制。
+
+### 本地 Saluki 优化建议
+
+1. **保持 prompt 前缀稳定**：固定系统提示、工具表、模型和 reasoning effort；同一任务尽量在同一会话继续。频繁切换模型、MCP server 或 skill 会让 llama.cpp 的前缀缓存失效，应用内“缓存命中”可直接观察。
+2. **控制上下文长度**：128K 窗口、60% 阈值约 78.6K token 触发压缩；27B 模型在长上下文下延迟和质量都会下降。新任务开新会话，长任务在 60% 前后主动 `/compact` 或新会话，避免等到 100%。
+3. **降低输出上限**：交互式编码可把 `maxTokens` 从 16384 降到 8192；复杂重构或长输出任务再临时提高。`reasoningEfforts: high` 只用于困难任务。
+4. **精简工具面**：在“对话信息 → 上下文构成”观察工具 token 占比；关闭不用的 MCP server、skill 和插件，减少每次请求的 prefill。本机 `local_models`/REA/office 工具较多，按需启用。
+5. **图片/视频按需**：本地 Saluki 声明支持图片，但视觉输入会显著增加 prefill；只发必要截图。图片/视频生成会占用 GPU（调度器会临时卸载/恢复 Saluki），不要在长会话推理期间并发生成。
+6. **llama.cpp 参数核对**：确认 `--ctx-size` 与 DSH `contextWindow` 一致（131072），开启 prompt cache / `--cache-reuse` 与 flash attention；显存不足时用量化 KV cache、降低 `--parallel`/batch，避免 OOM 重试。
+7. **本地并发**：同一时间只保留一个活跃本地会话以保持 slot/KV 缓存热度；本地模型上大量并行子代理会增加 GPU 排队，建议串行。
+8. **数据可信度**：缓存命中为 provider 上报值；若本地 provider 不返回 cached token，应用会隐藏该指标，可用 llama.cpp 日志或 usage 响应确认。
+
 ## 安全与维护
 
 - 不提交：`keystore`、`credentials.json`、`.env`、`.dev.vars`、`.wrangler/`、`.tmp/`、`_scratch/`。

@@ -47,6 +47,7 @@ import { hasVisibleMessageText } from '../state/event-reducer'
 import type { ChatSection } from '../state/message-helpers'
 import { chatSections, inboxQueuedItems, inboxRpcIds, mergeReplyReasoning } from '../state/message-helpers'
 import { requireSessionTools, useAppStore } from '../state/store'
+import { sessionMetrics } from '../state/session-metrics'
 import { placeUiArtifacts, projectUiArtifacts, type UiArtifact } from '../state/ui-artifacts'
 import type {
   ChatItem,
@@ -107,6 +108,7 @@ import { relativeTime, sessionTitle } from './chat/presentation'
 import { createStyles } from './chat/styles'
 import { useLiveSessionStatus } from './device-screens'
 import { SessionInfo } from './chat/session-info'
+import { SessionMetricsBar } from './chat/session-metrics'
 import { workspaceStableKey } from '../lib/workspace-key'
 import { HostSessionsDrawer } from './host-sessions-drawer'
 import { resolveSessionDisplayTitle } from './session-title'
@@ -125,6 +127,7 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
   // without leaving the chat (the list screens unmount here).
   useLiveSessionStatus()
   const session = useAppStore(state => state.selectedSession)
+  const metrics = useMemo(() => sessionMetrics(session), [session])
   const hostId = useAppStore(state => state.selectedDevice?.deviceId)
   const hostPlatform = useAppStore(state => state.selectedDevice?.platform)
   const messages = useAppStore(state => session === undefined ? EMPTY_CHAT_ITEMS : state.messages[session.sessionId] ?? EMPTY_CHAT_ITEMS)
@@ -1034,6 +1037,10 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
           <IconButton label={zhCN.chat.newChat} icon={OfficialMenuIcons.newChat} dense onPress={() => void startNewSession()} disabled={newSessionPending || busy !== undefined} />
           {!connected && <IconButton label={zhCN.chat.reconnect} icon={RefreshCw} dense onPress={() => void reconnectCurrentSession()} disabled={connectionRetrying} />}
         </>}
+      />
+      <SessionMetricsBar
+        metrics={metrics}
+        onPress={() => { Keyboard.dismiss(); setMentionType(null); setSessionInfoOpen(true) }}
       />
       {!connected && (
         <View style={styles.connectionBanner} accessibilityRole="alert">

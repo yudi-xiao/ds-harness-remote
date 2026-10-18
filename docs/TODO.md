@@ -32,7 +32,7 @@ RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真
 - [x] 品牌统一为 `DSH Remote Agent`：启动页/登录页/设备页/关于页文案、新自适应图标与启动屏、设备名 `… · DSH Remote Agent` 迁移。
 - [x] 登录状态保持：设备凭据保存在 SecureStore；认证异常不再立即删除凭据，显式退出/重置才清除；重启后进入设备列表。
 - [x] 引入 `expo-video`，会话内显示 Host 视频结果：Host MCP `generate_video` 支持 `workspace_dir`，复制 MP4 + 首帧 JPEG 到 `_scratch/videos/` 并返回 `workspace_relative_path`/`cover_relative_path` + 原生封面；Android 封面+播放按钮、点击分块读取 `workspaceFiles/readBytes`、App 缓存播放。
-- [x] 版本 `0.7.0` / `versionCode 52` / runtimeVersion `0.7.0`；Android check 与 25 文件 / 143 测试通过；Hermes bundle 导出通过。
+- [x] 版本 `0.7.0` / `versionCode 52` / runtimeVersion `0.7.0`；Android check 与 26 文件 / 146 测试通过；Hermes bundle 导出通过。
 - [x] EAS 构建 0.7.0 preview APK 完成（build `b4f03830-186c-4861-ae9f-37c9ad8c6599`，APK <https://expo.dev/artifacts/eas/NQumxj6sQc5E2wXXmsQR_d6sh8Ty8NgJs55qZ0IXf0E.apk>，140,387,455 bytes，SHA-256 `1F9EECA14F0141B5361356D9EBC6561D4F1BDB0D6ED1A8C591A2231EFCFD991C`）；已解包确认 bundle 含品牌/视频路径字段、`classes3.dex` 含 expo-video。
 - [x] 为 runtime `0.7.0` 发布 EAS Update（`preview`，group `a0c861df-5a03-488a-8029-145f823eadc3`，manifest `01a15012-b191-7a0c-8ca7-4816264dfdc3`），公网 manifest 校验通过。
 - [x] 修复真机视频播放报“视频不在工作区”：`workspaceFiles/readBytes` 经 client-core 返回的 `data` 是 `Uint8Array` 而非 base64；解析现同时支持两种形态，并发布 JS-only OTA（group `8ac8104e-4fd4-467a-b421-ee18f86ae39f`，id `01a15022-7633-7606-83d3-ba305eb4017d`）；新增对应单测。
@@ -41,6 +41,10 @@ RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真
 - [x] 同时修复 Files 面板图片/PDF 的同类 `Uint8Array` 分块问题；最新 OTA group `6f7a765d-5629-4f0a-86ed-df078268206e`（id `01a15026-2b27-76d8-afae-5e2215075fd5`），公网 manifest 校验通过。
 - [x] 真机重新拉取 OTA（关于页显示更新 ID `01a15026-…`、Bundle 来源 OTA）并验证会话内视频卡片可下载/播放；登录保持、新名称与图标均已确认。
 - [ ] 可选：在新对话中真实生成一条 H3 视频（带封面/音频），验证 generate_video → workspace 复制 → 卡片播放的完整链路。
+- [x] 会话标题栏新增上下文占用、缓存命中率与权限等级指标（读取官方 `tokenUsage`/`contextPressure`/`permissions` projections），“对话信息”面板展示上下文构成、Token 用量、累计/本轮缓存命中与当前模型；26 文件 / 146 测试通过。
+- [x] 发布指标 OTA（group `a8174995-e74d-4436-8a96-79e1cf430cd2`，id `01a1505d-8f1d-71a7-aa74-dfa34238b638`），公网 manifest 校验通过。
+- [x] 个人文档新增本地 Saluki 优化建议（prompt cache、context/compaction、输出上限、工具面、GPU 串行、llama.cpp 参数核对）。
+- [ ] 可选：按建议调整 `local-saluki` 的 `maxTokens`/压缩阈值，或在本机会话中验证指标随本地模型实时更新。
 
 ## 2026-10-18 版本审查后续
 

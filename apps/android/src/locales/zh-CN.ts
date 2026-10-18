@@ -106,7 +106,9 @@ const zhCN = {
     networkDetails: '网络详情', phoneEndpoint: '手机端点', computerEndpoint: '电脑端点', relayEndpointUnavailable: '服务器转发未公开', connectionServer: '连接服务器', networkProtocol: '网络协议', candidatePath: '候选路径', roundTripTime: '往返延迟', availableBitrate: '可用上行带宽', traffic: '本次流量', connectedAt: '连接时间', sent: '发送', received: '接收',
     forgetTitle: (name: string) => `解除“${name}”的绑定？`, forgetBody: '这会从账号中移除这台设备并断开远程连接。再次使用前，需要在电脑端重新绑定。', forget: '解除绑定',
   },
-  sessionInfo: { title: '对话信息', workspaceInfo: '工作区信息', host: '主机', workspaceDirectory: '工作区目录', sessionDirectory: '对话目录' },
+  sessionInfo: { title: '对话信息', workspaceInfo: '工作区信息', host: '主机', workspaceDirectory: '工作区目录', sessionDirectory: '对话目录',
+    usage: '用量与上下文', contextUsage: '上下文占用', contextBreakdown: '上下文构成', cacheHitTotal: '累计缓存命中', cacheHitLast: '本轮缓存命中',
+    tokenInput: '未缓存输入', tokenOutput: '输出', tokens: 'Token 用量', cacheTokens: '缓存 Token', cacheRead: '缓存读取', cacheWrite: '缓存写入', permissionLevel: '权限等级', sandboxMode: '沙箱模式', approvalMode: '审批策略', model: '模型', system: '系统', tools: '工具', messages: '消息' },
   sessions: { archive: '归档对话', archiveTitle: '归档这段对话？', archiveBody: '归档后，这段对话会从工作区列表中隐藏。', untitled: '新对话', child: '子任务对话' },
   time: { unavailable: '更新时间不可用', lastSeenUnavailable: '活跃时间不可用', lastActive: (value: string) => `${value}活跃`, now: '刚刚', justNow: '刚刚更新', minutesAgo: (n: number) => `${n} 分钟前`, hoursAgo: (n: number) => `${n} 小时前`, updatedSuffix: '更新', locale: 'zh-CN' },
   transport: { auto: '自动（推荐）', autoDescription: '优先尝试 P2P 直连，必要时自动改用 TURN 或服务器转发', turn: 'TURN 优先', turnDescription: '网络受限时，优先使用 TURN 转发以提高稳定性', relay: '仅服务器转发', relayDescription: '所有数据都通过 DSH Remote 服务器转发' },
@@ -117,6 +119,7 @@ const zhCN = {
     deleteTitle: (title: string) => `删除“${title}”？`, deleteBody: '将从这台设备上删除该工作区及其中的所有对话。此操作无法撤销。', delete: '删除工作区', rename: '重命名', moveUp: '上移', moveDown: '下移', expandWorkspace: (title: string) => `展开工作区“${title}”`, collapseWorkspace: (title: string) => `折叠工作区“${title}”`, newSessionIn: (title: string) => `在“${title}”中新建对话`, deviceDirectory: '电脑上的项目目录', browse: '选择目录', directoryHint: '在这里新建的对话会使用该目录。', codexDirectoryHint: '所选目录会添加到电脑端 CodeX 项目目录。', cursorDirectoryHint: '所选目录会作为 Cursor ACP 会话的工作目录（仅保存在本机连接期间）。', piDirectoryHint: '所选目录会作为 Pi ACP 会话的工作目录（仅保存在本机连接期间）。', antigravityDirectoryHint: '使用所选目录进行 AGY 对话，已有对话从电脑端加载。', opencodeDirectoryHint: '使用所选目录进行 OpenCode 对话，已有对话从电脑端加载。', claudeDirectoryHint: '使用所选目录进行 Claude 对话，已有对话从电脑端加载。', renameTitle: '重命名工作区', namePlaceholder: '输入工作区名称', saveName: '保存', chooseFolder: '选择项目目录', loading: '正在加载…', loadingDirectory: '正在读取目录…', noFolders: '这里没有可选的文件夹', showHidden: '显示隐藏文件夹', hideHidden: '隐藏隐藏文件夹', chooseThisFolder: '使用此目录',
   },
   chat: {
+    contextShort: '上下文', cacheShort: '缓存',
     currentWorkSessions: '当前工作', noCurrentWorkSessions: '本次远程尚未使用对话',
     otherHostSessions: '其他对话',
     hostSessions: '主机对话', openHostSessions: '打开当前主机的对话列表', noHostSessions: '当前主机暂无对话',

@@ -608,8 +608,9 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   （140,387,455 bytes，SHA-256 `1F9EECA14F0141B5361356D9EBC6561D4F1BDB0D6ED1A8C591A2231EFCFD991C`）。
   解包校验：Hermes bundle 含 `DSH Remote Agent`/`workspace_relative_path`/`cover_relative_path`/
   `video/mp4`/`chat-videos`，`classes3.dex` 含 `expo-video`/`ExpoVideo`/`expo.modules.video`。
-- 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、25 文件 / 143 测试、
-  `expo config --type prebuild` 与 Hermes bundle 导出通过；新增视频结果投影与分块传输核心测试。
+- 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、26 文件 / 146 测试、
+  `expo config --type prebuild` 与 Hermes bundle 导出通过；新增视频结果投影、分块传输与
+  session projections 用量解析测试。
 - 真机首测发现视频播放报“视频文件不在会话工作区中”：client-core 的 `RemoteTypertGateway`
   会把 `workspaceFiles/readBytes` 的二进制 `data` 还原成 `Uint8Array`，而首版 `chat-video.ts`
   只接受 base64 字符串。`parseChunk` 现同时接受 `Uint8Array` 与 legacy base64，并新增测试；
@@ -619,8 +620,15 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   `8ac8104e-4fd4-467a-b421-ee18f86ae39f`（id `01a15022-7633-7606-83d3-ba305eb4017d`）与
   About 诊断 `d05f1573-812f-4c3a-8405-341471e75d06`（id `01a15024-458f-7cf7-b051-fa404519c646`）
   与 Files 面板二进制分块修复 `6f7a765d-5629-4f0a-86ed-df078268206e`
-  （id `01a15026-2b27-76d8-afae-5e2215075fd5`）；About 页显示运行版本 / 更新 ID / Bundle 来源
-  （内置包或 OTA）。公网 manifest 返回最新更新。
+  （id `01a15026-2b27-76d8-afae-5e2215075fd5`）与会话指标
+  `a8174995-e74d-4436-8a96-79e1cf430cd2`（id `01a1505d-8f1d-71a7-aa74-dfa34238b638`）；
+  About 页显示运行版本 / 更新 ID / Bundle 来源（内置包或 OTA）。公网 manifest 返回最新更新。
+- 会话指标：Android 标题下方读取官方 `tokenUsage`/`contextPressure`/`contextBreakdown`/
+  `permissions`/`modelSelection` projections，显示上下文占用、缓存命中率与权限等级；点击
+  打开“对话信息”查看上下文构成、Token 用量、缓存命中和模型。provider 不上报缓存时隐藏
+  缓存指标，不改动 Host 端点或持久化。
+- 本地 Saluki 优化记录见 `docs/personal-agent-app.zh.md`（prompt cache 稳定性、128K 上下文
+  与 60% 压缩阈值、输出上限、工具面裁剪、GPU 串行、llama.cpp 参数核对）。
   0.7.0 APK 已构建/安装；真机验收通过（2026-10-19）：关于页显示更新 ID `01a15026-…`（OTA），
   会话内视频卡片点击后成功下载并播放（有声），登录保持、`DSH Remote Agent` 名称与新图标均已确认。
   可选后续：新对话中真实生成一条 H3 视频（含封面），验证 generate_video → workspace 复制 → 卡片播放完整链路。
