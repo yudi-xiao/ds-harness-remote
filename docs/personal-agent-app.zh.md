@@ -28,6 +28,7 @@
   - 大小 140,387,455 bytes；SHA-256 `1F9EECA14F0141B5361356D9EBC6561D4F1BDB0D6ED1A8C591A2231EFCFD991C`；同包名/同签名，可直接覆盖安装并保留登录数据。
   - 已解包校验：`assets/index.android.bundle` 含 `DSH Remote Agent`、`workspace_relative_path`、`cover_relative_path`、`video/mp4`、`chat-videos`；`classes3.dex` 含 `expo-video` / `ExpoVideo` / `expo.modules.video`，说明原生视频模块已编入。
   - 旧 `0.6.0` 的 EAS Update 不会下发到 `0.7.0`；`expo-video` 是原生模块，必须重新安装 APK。
+- **0.7.0 EAS Update 已发布**（`preview` 分支，runtime `0.7.0`）：update group `a0c861df-5a03-488a-8029-145f823eadc3`，manifest <https://u.expo.dev/update/01a15012-b191-7a0c-8ca7-4816264dfdc3>。APK 首次启动会拉取该更新（内容与内置 bundle 一致）；后续 JS 修复可继续用同一分支发布。
 - **Host 侧前置条件**：本机 H3 工具已支持 `workspace_dir`（`C:\Users\shuoh\WebstormProjects\LLM\integrations\dsh\local-tools-mcp.cjs` + `media-result.cjs` + `services/h3-comfy.cjs` / `model-scheduler.cjs` / `services/inspect-video.py`，用 `runtime\h3-env` 的 PyAV 抽首帧）。模型需在调用 `generate_video` 时把当前会话工作区作为 `workspace_dir` 传入；MCP 进程需在 DSH 新会话中重启后才会暴露新参数。
 
 ## 组成

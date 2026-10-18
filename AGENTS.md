@@ -610,4 +610,6 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   `video/mp4`/`chat-videos`，`classes3.dex` 含 `expo-video`/`ExpoVideo`/`expo.modules.video`。
 - 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、24 文件 / 137 测试、
   `expo config --type prebuild` 与 Hermes bundle 导出通过；新增视频结果投影核心测试。
-  0.7.0 APK 已构建完成；真机视频播放/登录保持/新品牌图标与 0.7.0 OTA 发布仍待验收。
+  0.7.0 EAS Update 已发布到 `preview`（group `a0c861df-5a03-488a-8029-145f823eadc3`，
+  id `01a15012-b191-7a0c-8ca7-4816264dfdc3`），公网 manifest 对 runtime `0.7.0` 返回该更新。
+  0.7.0 APK 已构建完成；真机视频播放/登录保持/新品牌图标仍待验收。
