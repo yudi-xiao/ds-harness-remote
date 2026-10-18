@@ -2,17 +2,17 @@ import { ChevronRight, Gauge, ShieldCheck, Zap } from 'lucide-react-native'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { strings } from '../../locales/i18n'
 import { hasSessionMetrics, formatPercent, type SessionMetrics } from '../../state/session-metrics'
-import { spacing } from '../../ui/theme'
+import { radius, spacing } from '../../ui/theme'
 import type { ThemeColors } from '../../ui/theme-context'
 import { useTheme } from '../../ui/theme-context'
 import { useThemedStyles } from '../../ui/use-themed-styles'
 import { permissionDisplayName } from './pickers'
 
 /**
- * Compact, always-visible session meter under the conversation title. The
- * values come from the official `tokenUsage` / `contextPressure` /
- * `permissions` projections, so they update live with each step instead of
- * being sampled locally by the app.
+ * Compact session meter shown directly above the composer. It lives in the
+ * opaque composer surface (never inside the translucent chat header), so it
+ * cannot overlap the conversation text. Values come from the official
+ * `tokenUsage` / `contextPressure` / `permissions` projections.
  */
 export function SessionMetricsBar({ metrics, onPress }: { metrics: SessionMetrics; onPress: () => void }) {
   const { colors } = useTheme()
@@ -44,20 +44,20 @@ export function SessionMetricsBar({ metrics, onPress }: { metrics: SessionMetric
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
       {context !== undefined && <>
-        <Gauge size={12} color={hot ? colors.warning : colors.muted} />
+        <Gauge size={13} color={hot ? colors.warning : colors.muted} />
         <Text style={[styles.text, hot && { color: colors.warning }]}>{strings.chat.contextShort} {context}</Text>
       </>}
       {cache !== undefined && <>
         <View style={styles.dot} />
-        <Zap size={12} color={colors.muted} />
+        <Zap size={13} color={colors.muted} />
         <Text style={styles.text}>{strings.chat.cacheShort} {cache}</Text>
       </>}
       {permission !== undefined && <>
         <View style={styles.dot} />
-        <ShieldCheck size={12} color={dangerous ? colors.warning : colors.muted} />
+        <ShieldCheck size={13} color={dangerous ? colors.warning : colors.muted} />
         <Text style={[styles.text, dangerous && { color: colors.warning }]} numberOfLines={1}>{permission}</Text>
       </>}
-      <ChevronRight size={12} color={colors.muted} />
+      <ChevronRight size={13} color={colors.muted} />
     </Pressable>
   )
 }
@@ -71,15 +71,22 @@ function compact(value: number | undefined): string | undefined {
 
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
   row: {
-    minHeight: 22,
+    alignSelf: 'center',
+    maxWidth: '100%',
+    minHeight: 26,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xs,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.separator,
+    backgroundColor: colors.surfaceStrong,
   },
   pressed: { opacity: 0.6 },
-  text: { color: colors.muted, fontSize: 11, lineHeight: 16 },
+  text: { color: colors.muted, fontSize: 11, lineHeight: 16, flexShrink: 1 },
   dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: colors.muted, opacity: 0.6, marginHorizontal: 2 },
 })

@@ -1038,10 +1038,6 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
           {!connected && <IconButton label={zhCN.chat.reconnect} icon={RefreshCw} dense onPress={() => void reconnectCurrentSession()} disabled={connectionRetrying} />}
         </>}
       />
-      <SessionMetricsBar
-        metrics={metrics}
-        onPress={() => { Keyboard.dismiss(); setMentionType(null); setSessionInfoOpen(true) }}
-      />
       {!connected && (
         <View style={styles.connectionBanner} accessibilityRole="alert">
           <View style={styles.connectionDot} />
@@ -1133,6 +1129,10 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
             {!stopping && <ReplyStatusDots />}
           </View>
         )}
+        <SessionMetricsBar
+          metrics={metrics}
+          onPress={() => { Keyboard.dismiss(); setMentionType(null); setSessionInfoOpen(true) }}
+        />
         <View style={{ position: 'relative', zIndex: 20, elevation: 20 }}>
           {mentionType !== null && (
             <MentionPopover groups={mentionGroups} onDismiss={closeMention} emptyText={zhCN.mention.noMatches} />

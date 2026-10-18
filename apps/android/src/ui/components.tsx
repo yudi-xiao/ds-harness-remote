@@ -178,6 +178,12 @@ export function TopBar({
           pointerEvents="none"
         />
       )}
+      {/* A blurred header otherwise lets conversation text ghost through the
+          system status bar; paint the inset region with the normal surface so
+          the status bar stays legible while the content below keeps its frost. */}
+      {blurTarget !== undefined && insets.top > 0 && (
+        <View style={[styles.statusBarScrim, { height: insets.top }]} pointerEvents="none" />
+      )}
       <View style={styles.topBarSide}>
         {onBack !== undefined && (
           <IconButton label={backLabel ?? zhCN.common.back} icon={backIcon ?? ArrowLeft} onPress={onBack} hitSlop={8} />
@@ -468,6 +474,7 @@ function createStyles(colors: ThemeColors) {
     frameFade: { position: 'absolute', top: '100%', left: 0, right: 0, height: spacing.lg },
     frameHeader: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
     topBarBlurred: { backgroundColor: 'transparent', borderBottomWidth: 0 },
+  statusBarScrim: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: colors.surface },
     topBarWithSubtitle: { minHeight: 68, paddingVertical: spacing.sm },
     topBarSide: { minWidth: 48, flexDirection: 'row', alignItems: 'center' },
     topBarTrailing: { justifyContent: 'flex-end' },
