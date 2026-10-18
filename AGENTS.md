@@ -575,3 +575,35 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
 新 Agent 已安装并登录，Server 设备 `3023a87f-8dcb-4525-9037-76354daaabf7`
 （clientVersion `0.6.0`，online），Host 信任列表已更新；用户确认会话内可直接看到
 工具结果图片（历史图片与 `read_image` 结果）。对应改动已本地提交 `16606d0`（未推送）。
+
+## Personal agent app v0.7.0 experience refactor (2026-10-19)
+
+按用户要求重构个人 App 体验（品牌、登录保持、会话内视频）：
+
+- 品牌：`app.json` 显示名 `DSH Remote Agent`，`version 0.7.0` / `versionCode 52`；新增
+  `src/brand.ts` 统一可见名称；启动页/登录页/设备列表标题/关于页/协议标签使用该常量。
+  新图标 `assets/icon.png` + 透明自适应前景 `assets/android-icon-foreground-adaptive.png`
+  （深海军蓝 `#0B1220` 底 + 青色互联六边形节点）+ `assets/splash-brand.png`。旧
+  `… · DSH Remote` 本地设备名在 `bootstrap` 中一次性迁移为 `… · DSH Remote Agent`
+  （`saveIdentity`，Host 下一次握手更新 trusted-peer 名称）。
+- 登录保持：设备凭据仍保存在 `expo-secure-store`；`requireReauth` 不再立即删除凭据，
+  认证异常后下次启动仍可用同一凭据重试；显式 `signOut`/`resetLocalData` 才清空。
+  重启后直接进入设备列表（不做自动连接）。
+- 会话视频：新增 `expo-video ~57.0.2`。`src/services/chat-video.ts` 通过官方只读
+  `workspaceFiles/stat` + `readBytes`（512 KiB/块，≤ 120 MiB）把工作区 MP4 写入
+  `Paths.cache/chat-videos`，以会话 + 路径 + 文件版本缓存；`src/screens/chat/videos.tsx`
+  渲染“封面 + 播放按钮”卡片，点击后才下载，并在全屏 `VideoView` 中播放。`event-reducer.ts`
+  从工具结果的 JSON 文本解析 `workspace_relative_path`/`cover_relative_path`/`bytes`/
+  `duration_seconds`/`width`/`height`（路径必须是安全的相对 `.mp4`），把 `videos` 挂到
+  `ToolActivity`；封面复用现有原生图片附件，不再重复渲染。
+- Host 侧前置条件（个人 `C:\Users\shuoh\WebstormProjects\LLM`，不在本仓库）：`generate_video`
+  schema 增加可选 `workspace_dir`；`media-result.cjs` 校验绝对路径后把 MP4 与首帧 JPEG
+  复制到 `<workspace>/_scratch/videos/`，返回工作区相对路径并把封面作为 image content；
+  `services/inspect-video.py` 用 `runtime\h3-env` 的 PyAV/Pillow 抽首帧，`h3-comfy.cjs` 与
+  `model-scheduler.cjs` 生成 `.jpg` sidecar。MCP schema 变更需新 DSH 会话生效。
+- 版本：`runtimeVersion.policy = appVersion`，当前 `0.7.0`；0.6.0 已发布的 OTA 不会下发到
+  0.7.0。`expo-video` 是原生模块，必须重新构建/安装 APK（preview build
+  `b4f03830-186c-4861-ae9f-37c9ad8c6599`）。
+- 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、24 文件 / 137 测试、
+  `expo config --type prebuild` 与 Hermes bundle 导出通过；新增视频结果投影核心测试。
+  0.7.0 APK 构建结果、真机视频播放/登录保持/新品牌图标与 0.7.0 OTA 发布仍待验收。

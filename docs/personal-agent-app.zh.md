@@ -17,11 +17,19 @@
 - 安装：新包名/签名与旧 `DSH Remote` 不同，因此可以与旧 App 共存，无需先卸载；建议安装 `Agent` 并完成登录后卸载旧 App。首次打开登录页 Server/账号已预填，输入个人 Server 密码登录。
 - **首次 EAS Update 已发布**（`preview` 分支）：update group `cf4a86d0-6519-4228-b3fd-73cb8fe6e5ea`，runtimeVersion `0.6.0`，manifest <https://u.expo.dev/update/01a14fda-2087-7d8f-9502-5059721c8c5b>。App 启动后会按 channel 拉取该更新（内容与内置 bundle 相同，用于验证通道）。
 
+## v0.7.0 体验重构（2026-10-19）
+
+- **品牌统一**：显示名/启动页/登录页/设备页/关于页/安全横幅统一为 `DSH Remote Agent`；新增本地图标（深海军蓝 + 青色互联六边形节点），适配 Android 自适应图标与启动屏；旧设备名 `… · DSH Remote` 在启动时一次性迁移为 `… · DSH Remote Agent`。
+- **记住登录**：设备凭据继续保存在 `expo-secure-store`；认证异常不再立即删除设备凭据，下次启动仍可用原凭据重试，只有显式“退出登录/重置”才清空。重启 App 后直接进入设备列表，无需重新输入密码。
+- **会话内视频**：新增 `expo-video`。Host 端 H3 视频工具新增 `workspace_dir` 参数：生成后把 MP4 与首帧 JPEG 封面复制到 `<session workspace>/_scratch/videos/`，结果里返回 `workspace_relative_path` / `cover_relative_path` 并把封面作为原生图片附件返回。Android 会话显示“封面 + 播放按钮”卡片；点播放时才经官方只读 `workspaceFiles/readBytes` 分块拉取（≤ 120 MiB，512 KiB/块），写入 App 缓存后用 expo-video 全屏播放，历史不会自动下载视频字节。
+- **构建**：`version 0.7.0` / `versionCode 52`，运行时版本 `0.7.0`。新 APK 构建 `b4f03830-186c-4861-ae9f-37c9ad8c6599`（preview）；`expo-video` 是原生模块，必须重新构建/安装 APK；旧 `0.6.0` 的 EAS Update 不会下发到 `0.7.0`。
+- **Host 侧前置条件**：本机 H3 工具已支持 `workspace_dir`（`C:\Users\shuoh\WebstormProjects\LLM\integrations\dsh\local-tools-mcp.cjs` + `media-result.cjs` + `services/h3-comfy.cjs` / `model-scheduler.cjs` / `services/inspect-video.py`，用 `runtime\h3-env` 的 PyAV 抽首帧）。模型需在调用 `generate_video` 时把当前会话工作区作为 `workspace_dir` 传入；MCP 进程需在 DSH 新会话中重启后才会暴露新参数。
+
 ## 组成
 
 | 组件 | 个人配置 |
 | --- | --- |
-| Android App | 显示名 `Agent`，包名 `com.howlearnwood.agent`，`version 0.6.0` / `versionCode 51`；EAS 云构建 |
+| Android App | 显示名 `DSH Remote Agent`，包名 `com.howlearnwood.agent`，`version 0.7.0` / `versionCode 52`；EAS 云构建 |
 | Expo 项目 | `@shuohigh/dsh-agent`，projectId `61c55e4e-03c6-4faa-b7b7-dd9ac3f92175`（已写入 `app.json`） |
 | 应用签名 | 本地 release keystore（`apps/android/keystores/`，不入库，需离线备份；本机备份在 `~/.dsh/personal/agent-signing/`） |
 | 更新通道 | EAS Update：`preview`（自用 APK）与 `production`（备用），`updates.url = https://u.expo.dev/61c55e4e-03c6-4faa-b7b7-dd9ac3f92175` |
@@ -115,7 +123,7 @@ pnpm --filter @dsh-remote/server-cf run deploy
 ### 5. Host 与手机首次登录
 
 1. Host 安装/更新本插件的发布包（npm 或 GitHub）；Host 需登录同一 Server 账号并保持运行。
-2. 手机安装 `Agent` APK 后打开：Server URL 与账号已预填，输入 Server 密码登录。
+2. 手机安装 `DSH Remote Agent` APK 后打开：Server URL 与账号已预填，输入 Server 密码登录；之后正常重启/OTA 更新会保持登录，直接进入设备列表。
 3. 在设备列表中选择自己的 Host，验证指纹并信任，再进入会话。
 
 ## 构建 APK
@@ -129,8 +137,8 @@ pnpm --dir apps/android dlx eas-cli@latest build -p android --profile preview --
 - `credentials.json` 必须是**无 BOM 的有效 JSON**，否则 EAS CLI 会报 “credentials.json must exist … and contain a valid JSON”；`keystorePath` 相对 `apps/android` 解析。
 - EAS 构建前会执行 `apps/android/package.json` 的 `eas-build-post-install`（`scripts/eas-post-install.mjs`）：构建 `packages/**`、生成 xterm/PDF renderer 与可选 Intelligent UI renderer，再交给 Expo prebuild 与 Gradle。
 - 自定义 config plugin 使用 `.cjs`（`plugins/with-remote-foreground-service.cjs`），因为 `apps/android/package.json` 是 `"type": "module"`；插件从 `android.package` 动态读取包名并替换 Kotlin 模板，改包名不需要改插件源码。
-- 构建完成后从 expo.dev 构建页下载/安装 APK。由于本次改为个人包名与新签名，首次安装需先卸载旧 `DSH Remote`。
-- `versionCode` 必须在每次安装升级前递增（`app.json` 的 `android.versionCode`）。
+- 构建完成后从 expo.dev 构建页下载/安装 APK。同包名同签名的新版本可直接覆盖安装；旧 `DSH Remote` 包名不同，可与当前 App 共存。
+- `versionCode` 必须在每次安装升级前递增（`app.json` 的 `android.versionCode`）；新增原生模块（如 `expo-video`）或改权限/图标时必须重新构建 APK，不能只发 OTA。
 
 ## JS 更新（EAS Update，免重装）
 
@@ -144,6 +152,7 @@ pnpm --dir apps/android dlx eas-cli@latest update --branch preview --environment
 ```
 
 - `--environment preview` 在 `--non-interactive` 下必填；`.env` 中的 `EXPO_PUBLIC_*` 会在本地导出时内联进 OTA bundle。
+- 当前 APK 的 runtimeVersion 为 `0.7.0`；给 `0.7.0` 发布更新时必须使用同一分支/通道，旧 `0.6.0` 的更新不会下发到新版本。
 - 若本机 Windows 上 Hermes 报 `permission denied` / `Failed to open file ... .hbc`，把 `TMP`/`TEMP` 指向用户可写目录后重试（本仓库开发机由 Agent 运行时遇到过该限制）。
 - `preview` 构建的 channel 会收到 `preview` 分支更新；`runtimeVersion.policy = appVersion`，因此同一 `version` 内的更新可下发。
 - 原生依赖/权限/包名/签名变化必须重新构建 APK，并递增 `version`（runtimeVersion）与 `versionCode`。
@@ -156,6 +165,15 @@ Android App 现在会在会话中直接显示工具结果图片：
 - 打开会话/加载更早历史/收到新事件时，经官方只读 `session.attachment`（rc.2 ApiProxy 与 Typert Remote 两条数据面）按会话授权读取；
 - 客户端校验附件 id、media type、canonical base64 与字节数（单张 ≤ 12 MiB），按 Host 比例自适应显示，点击可全屏，折叠的工具过程组也直接展示结果图片；
 - 旧 Host 没有该端点时保留占位符，不影响会话其它内容。
+
+## 会话视频结果（v0.7.0）
+
+Android 会话现在可以显示并播放 Host 生成的视频结果：
+
+1. Host 的 `generate_video` 工具生成 MP4 后，把当前 DSH 会话工作区作为 `workspace_dir` 传入（工具 schema 已更新）；MCP 会把 MP4 与首帧 JPEG 复制到 `<workspace>/_scratch/videos/`，并在结果 JSON 中写入 `workspace_relative_path`、`cover_relative_path`、`bytes`、`duration_seconds`、`width`、`height`，同时返回封面图片附件。
+2. Android 解析该结果后显示“封面 + 播放按钮”卡片；封面走现有图片附件链路，视频字节在用户点击播放时才经官方 `workspaceFiles/readBytes` 按 512 KiB 分块下载到 App 缓存（单视频上限 120 MiB），再用 `expo-video` 全屏播放。
+3. 历史记录只显示卡片，不会自动下载视频；缓存文件以会话 + 路径 + 文件版本为键，文件变化会重新拉取。
+4. 若 Host 未传 `workspace_dir`（旧 MCP 或旧会话），结果只显示文本/封面，不显示可播放卡片；MCP schema 变更需要新的 DSH 会话才会生效。
 
 ## 安全与维护
 

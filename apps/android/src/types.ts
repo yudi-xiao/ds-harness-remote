@@ -349,6 +349,25 @@ export interface ChatImage {
   height?: number
 }
 
+/**
+ * One video result stored in the session workspace. The Host video tool copies
+ * the MP4 there and keeps the result inside the official read-only workspace
+ * file scope; the client streams it on demand through `workspaceFiles/readBytes`
+ * and plays the cached file with expo-video.
+ */
+export interface ChatVideo {
+  /** Workspace-relative MP4 path reported by the tool result. */
+  workspacePath: string
+  /** Optional workspace-relative poster frame copied next to the MP4. */
+  coverPath?: string
+  mediaType: 'video/mp4'
+  bytes?: number
+  width?: number
+  height?: number
+  durationSeconds?: number
+  title?: string
+}
+
 /** Durable image reference returned by `session/attachment` (mirrors dsh-attachment). */
 export interface SessionAttachmentRef {
   attachmentId: string
@@ -381,6 +400,7 @@ export interface ToolActivity extends ChatItemBase {
   /** Original official tool name, separate from its localized display title. */
   toolKey?: string
   images?: ChatImage[]
+  videos?: ChatVideo[]
   arguments?: string
   summary?: string
   callDetail?: ToolDisplayDetail

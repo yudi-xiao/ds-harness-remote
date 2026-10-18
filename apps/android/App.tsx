@@ -8,6 +8,7 @@ import { ChatScreen } from './src/screens/chat-screen'
 import { ConnectionScreen, DeviceDetailScreen, DevicesScreen } from './src/screens/device-screens'
 import { AboutScreen, HomeActionsMenu, ServerSetupScreen, SettingsScreen } from './src/screens/setup-screens'
 import { WorkspacesScreen } from './src/screens/workspaces-screen'
+import { APP_NAME } from './src/brand'
 import { useAppStore } from './src/state/store'
 import type { WorkspaceShortcut } from './src/types'
 import {
@@ -360,7 +361,7 @@ function LoadingScreen() {
           resizeMode="contain"
           accessible={false}
         />
-        <Text style={styles.loadingTitle}>DSH Remote</Text>
+        <Text style={styles.loadingTitle}>{APP_NAME}</Text>
         <Text style={styles.loadingCredit}>{zhCN.app.credit}</Text>
       </View>
       <View style={styles.loadingDetails}>

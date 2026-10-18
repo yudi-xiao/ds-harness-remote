@@ -1,9 +1,14 @@
-import type { HistoryEntry, ApprovalOutcome, ChatImage, ChatItem, ChatMessage, ImageMediaType, MuxStreamFrame, NativeSessionEvent, ToolActivity, ToolDisplayDetail } from '../types'
+import type { HistoryEntry, ApprovalOutcome, ChatImage, ChatItem, ChatMessage, ChatVideo, ImageMediaType, MuxStreamFrame, NativeSessionEvent, ToolActivity, ToolDisplayDetail } from '../types'
 
 type UnknownRecord = Record<string, unknown>
 
 const MAX_TOOL_DETAIL_CHARS = 64_000
 const MAX_MESSAGE_IMAGES = 8
+const MAX_MESSAGE_VIDEOS = 4
+const MAX_VIDEO_PATH_LENGTH = 512
+const MAX_VIDEO_METADATA_CHARS = 16_000
+const VIDEO_PATH = /\.mp4$/iu
+const VIDEO_COVER_PATH = /\.(?:jpe?g|png|webp)$/iu
 const IMAGE_MEDIA_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
 const DATA_IMAGE_URL = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/]+={0,2})$/u
 
@@ -339,6 +344,7 @@ function applyToolCall(
     : toolResultDetail(view, data)
   const failed = state === 'finished' && toolResultFailed(data)
   const resultImages = state === 'finished' ? messageImages(data) : []
+  const resultVideos = state === 'finished' ? messageVideos(data) : []
   const uiMeta = state === 'finished' && !failed && ['ui_render', 'ui_patch', 'ui_render_widget'].includes(stringValue(data.name) ?? stringValue(data.toolName) ?? (current.find(item => item.id === id && item.kind === 'tool') as ToolActivity | undefined)?.toolKey ?? '')
     ? data.meta : undefined
   const next: ToolActivity = {
@@ -350,6 +356,7 @@ function applyToolCall(
     ...(argumentsText.length > 0 ? { arguments: argumentsText } : {}),
     ...(summary === undefined ? {} : { summary }),
     ...(resultImages.length === 0 ? {} : { images: resultImages }),
+    ...(resultVideos.length === 0 ? {} : { videos: resultVideos }),
     ...(uiMeta === undefined ? {} : { uiResultMeta: uiMeta }),
     ...(state === 'running' && detail !== undefined ? { callDetail: detail } : {}),
     ...(state === 'finished' && detail !== undefined ? { resultDetail: detail } : {}),
@@ -367,6 +374,7 @@ function applyToolCall(
         ...(next.callDetail === undefined ? {} : { callDetail: next.callDetail }),
         ...(next.resultDetail === undefined ? {} : { resultDetail: next.resultDetail }),
         ...(resultImages.length === 0 ? {} : { images: resultImages }),
+        ...(resultVideos.length === 0 ? {} : { videos: resultVideos }),
         // A new terminal result must not inherit an earlier success marker.
         ...(state === 'finished' ? { uiResultMeta: next.uiResultMeta } : {}),
         state: next.state,
@@ -670,6 +678,92 @@ function chatImages(blocks: readonly unknown[], depth = 0): ChatImage[] {
     if (images.length >= MAX_MESSAGE_IMAGES) break
   }
   return images
+}
+
+function messageVideos(data: UnknownRecord): NonNullable<ToolActivity['videos']> {
+  const message = isRecord(data.message) ? data.message : data
+  const content = Array.isArray(message.content) ? message.content : []
+  return chatVideos(content)
+}
+
+/**
+ * Project video results published by the Host video tool. The tool copies the
+ * MP4 (and a JPEG cover) into the session workspace and puts the relative
+ * paths plus a native cover image into the result; the MP4 itself is streamed
+ * lazily through the official read-only workspace file API when the user taps
+ * play, so history never downloads video bytes.
+ */
+function chatVideos(blocks: readonly unknown[], depth = 0): NonNullable<ToolActivity['videos']> {
+  if (depth > 2) return []
+  const videos: ChatVideo[] = []
+  const seen = new Set<string>()
+  for (const block of blocks) {
+    if (!isRecord(block)) continue
+    if (block.type === 'tool-result' && Array.isArray(block.content)) {
+      for (const video of chatVideos(block.content, depth + 1)) {
+        if (seen.has(video.workspacePath)) continue
+        seen.add(video.workspacePath)
+        videos.push(video)
+      }
+    } else if (block.type === 'text' && typeof block.text === 'string') {
+      for (const video of videosFromText(block.text)) {
+        if (seen.has(video.workspacePath)) continue
+        seen.add(video.workspacePath)
+        videos.push(video)
+      }
+    }
+    if (videos.length >= MAX_MESSAGE_VIDEOS) break
+  }
+  return videos.slice(0, MAX_MESSAGE_VIDEOS)
+}
+
+function videosFromText(text: string): ChatVideo[] {
+  const trimmed = text.trim()
+  if (trimmed.length === 0 || trimmed.length > MAX_VIDEO_METADATA_CHARS || trimmed[0] !== '{') return []
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(trimmed)
+  } catch {
+    return []
+  }
+  if (!isRecord(parsed)) return []
+  const workspacePath = workspaceRelativePath(stringValue(parsed.workspace_relative_path), VIDEO_PATH)
+  if (workspacePath === undefined) return []
+  const videoUrl = stringValue(parsed.video_url)
+  const outputPath = stringValue(parsed.output_path)
+  if (videoUrl === undefined && (outputPath === undefined || !VIDEO_PATH.test(outputPath))) return []
+  const coverPath = workspaceRelativePath(stringValue(parsed.cover_relative_path), VIDEO_COVER_PATH)
+  const bytes = boundedBytes(parsed.bytes)
+  const width = positiveInteger(parsed.width)
+  const height = positiveInteger(parsed.height)
+  const durationSeconds = positiveNumber(parsed.duration_seconds)
+  const name = workspacePath.slice(workspacePath.lastIndexOf('/') + 1, workspacePath.lastIndexOf('.'))
+  return [{
+    workspacePath,
+    mediaType: 'video/mp4',
+    ...(coverPath === undefined ? {} : { coverPath }),
+    ...(bytes === undefined ? {} : { bytes }),
+    ...(width === undefined || height === undefined ? {} : { width, height }),
+    ...(durationSeconds === undefined ? {} : { durationSeconds }),
+    ...(name.length === 0 ? {} : { title: name }),
+  }]
+}
+
+function workspaceRelativePath(value: string | undefined, extension: RegExp): string | undefined {
+  if (value === undefined || value.length === 0 || value.length > MAX_VIDEO_PATH_LENGTH) return undefined
+  if (value.includes('\\') || value.includes(':') || value.includes('\0') || value.startsWith('/')) return undefined
+  const segments = value.split('/')
+  if (segments.some(segment => segment.length === 0 || segment === '.' || segment === '..')) return undefined
+  if (!extension.test(value)) return undefined
+  return value
+}
+
+function boundedBytes(value: unknown): number | undefined {
+  return positiveInteger(value) !== undefined && (value as number) <= 512 * 1024 * 1024 ? value as number : undefined
+}
+
+function positiveNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : undefined
 }
 
 function chatImage(block: UnknownRecord): ChatImage | undefined {

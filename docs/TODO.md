@@ -27,6 +27,16 @@ RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真
 - [x] 本地提交（未推送）：commit `16606d0`，含图片回显、个人 EAS/Expo 构建体系与流程文档。
 - [ ] 真机确认 EAS Update 实际拉取/回滚（已在公网 manifest 校验通道可用）。
 
+## v0.7.0 体验重构（2026-10-19）
+
+- [x] 品牌统一为 `DSH Remote Agent`：启动页/登录页/设备页/关于页文案、新自适应图标与启动屏、设备名 `… · DSH Remote Agent` 迁移。
+- [x] 登录状态保持：设备凭据保存在 SecureStore；认证异常不再立即删除凭据，显式退出/重置才清除；重启后进入设备列表。
+- [x] 引入 `expo-video`，会话内显示 Host 视频结果：Host MCP `generate_video` 支持 `workspace_dir`，复制 MP4 + 首帧 JPEG 到 `_scratch/videos/` 并返回 `workspace_relative_path`/`cover_relative_path` + 原生封面；Android 封面+播放按钮、点击分块读取 `workspaceFiles/readBytes`、App 缓存播放。
+- [x] 版本 `0.7.0` / `versionCode 52` / runtimeVersion `0.7.0`；Android check 与 24 文件 / 137 测试通过；Hermes bundle 导出通过。
+- [ ] EAS 构建 0.7.0 preview APK（build `b4f03830-186c-4861-ae9f-37c9ad8c6599`）完成并安装到手机。
+- [ ] 真机验证：视频封面/播放/全屏、登录重启保持、新图标与 `DSH Remote Agent` 名称。
+- [ ] 为 runtime `0.7.0` 发布 EAS Update 并验证 OTA。
+
 ## 2026-10-18 版本审查后续
 
 - [x] 修复 ACP/CodeX 异步结果隔离、归属回滚、旧 Prompt、OpenCode history reader、Pi 模型确认及文件预览内存限额；全仓 check、689 个测试及生产 build 通过。修复尚未发布。

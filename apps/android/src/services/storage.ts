@@ -3,6 +3,7 @@ import * as Application from 'expo-application'
 import * as Crypto from 'expo-crypto'
 import * as Device from 'expo-device'
 import * as SecureStore from 'expo-secure-store'
+import { APP_NAME } from '../brand'
 import { isLanguagePreference, strings, type LanguagePreference } from '../locales/i18n'
 import type { Messages } from '../locales/types'
 import enUS from '../locales/en-US'
@@ -51,7 +52,7 @@ export async function loadOrCreateIdentity(): Promise<DeviceIdentity> {
   const appId = Application.applicationId
   const identity: DeviceIdentity = {
     deviceId: Crypto.randomUUID(),
-    name: model ? `${model} · DSH Remote` : 'Android · DSH Remote',
+    name: model ? `${model} · ${APP_NAME}` : `Android · ${APP_NAME}`,
     platform: 'android',
     publicKey: keyPair.publicKey,
     privateKey: keyPair.privateKey,
@@ -59,6 +60,11 @@ export async function loadOrCreateIdentity(): Promise<DeviceIdentity> {
   if (appId === null) identity.name = model ?? 'Android phone'
   await writeJson(KEYS.identity, identity)
   return identity
+}
+
+/** Persist a rebranded/renamed local identity before the next Host handshake. */
+export async function saveIdentity(identity: DeviceIdentity): Promise<void> {
+  await writeJson(KEYS.identity, identity)
 }
 
 export async function loadTrustedHosts(): Promise<RemoteDevice[]> {

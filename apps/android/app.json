@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Agent",
+    "name": "DSH Remote Agent",
     "slug": "dsh-agent",
     "scheme": "dshremote",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -13,28 +13,23 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.howlearnwood.agent",
-      "buildNumber": "51"
+      "buildNumber": "52"
     },
     "android": {
       "package": "com.howlearnwood.agent",
-      "versionCode": 51,
+      "versionCode": 52,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
-        "android.permission.REQUEST_INSTALL_PACKAGES",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.INTERNET",
         "android.permission.REQUEST_INSTALL_PACKAGES",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.INTERNET"
       ],
       "blockedPermissions": [
-        "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.SYSTEM_ALERT_WINDOW"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#FFFFFF",
+        "backgroundColor": "#0B1220",
         "foregroundImage": "./assets/android-icon-foreground-adaptive.png"
       },
       "predictiveBackGestureEnabled": false
@@ -46,9 +41,9 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-brand.png",
-          "imageWidth": 200,
+          "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#F5F5F7"
+          "backgroundColor": "#0B1220"
         }
       ],
       [

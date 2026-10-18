@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import * as Haptics from 'expo-haptics'
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, BackHandler, Easing, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Archive, ArrowLeft, ChevronRight, CircleCheck, Code2, Laptop, MessageSquareText, MoreVertical, Pencil, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react-native'
+import { APP_NAME } from '../brand'
 import { useAppStore } from '../state/store'
 import type { ConnectionProbeTransport, ConnectionStage, RemoteDevice, RemoteSession, WorkspaceShortcut } from '../types'
 import { workspaceStableKey } from '../lib/workspace-key'
@@ -93,7 +94,7 @@ export function DevicesScreen({ onDevice, onBack, onMore, onShortcut }: {
   return (
     <View style={styles.flex}>
       <BlurHeaderFrame header={<TopBar
-        title={isHome ? 'DSH Remote' : zhCN.devices.myDevices}
+        title={isHome ? APP_NAME : zhCN.devices.myDevices}
         onBack={onBack}
         action={isHome && onMore !== undefined
           ? <IconButton label={zhCN.settings.more} icon={MoreVertical} onPress={onMore} />

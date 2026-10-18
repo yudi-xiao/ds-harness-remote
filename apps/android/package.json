@@ -1,6 +1,6 @@
 {
   "name": "@dsh-remote/android",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "main": "index.ts",
   "dependencies": {
@@ -28,6 +28,7 @@
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.2",
     "expo-updates": "~57.0.26",
+    "expo-video": "~57.0.2",
     "lucide-react-native": "^1.31.0",
     "markdown-it": "^14.3.3",
     "pdfjs-dist": "6.3.289",

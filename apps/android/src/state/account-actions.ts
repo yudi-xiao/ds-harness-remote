@@ -1,4 +1,5 @@
 import * as Haptics from 'expo-haptics'
+import { APP_NAME } from '../brand'
 import { resolveAutoConnectDevice } from '../lib/auto-connect'
 import { friendlyError, isSessionAuthError } from '../lib/errors'
 import { applyLanguagePreference, strings as zhCN } from '../locales/i18n'
@@ -14,7 +15,6 @@ import {
 import { serverSession } from '../services/server-session'
 import {
   clearCodexPermissionPresets,
-  clearDeviceCredentials,
   clearLastConnectedDeviceId,
   clearLocalData,
   forgetHost,
@@ -30,6 +30,7 @@ import {
   loadTrustedHosts,
   saveDefaultPermissionPreset,
   saveFavoriteWorkspaces,
+  saveIdentity,
   saveLanguagePreference,
   saveRecentWorkspaces,
   saveServerConfig,
@@ -96,7 +97,7 @@ export function createAccountActions({ set, get }: StoreAccess): AccountActions 
     async bootstrap() {
       set({ bootPhase: 'loading', error: undefined, pendingAutoConnectDeviceId: undefined, reauthRequired: false })
       try {
-        const [config, identity, transportPreference, languagePreference, themePreference, favoriteWorkspaces, recentWorkspaces, lastConnectedDeviceId, defaultPermissionPreset] = await Promise.all([
+        const [config, loadedIdentity, transportPreference, languagePreference, themePreference, favoriteWorkspaces, recentWorkspaces, lastConnectedDeviceId, defaultPermissionPreset] = await Promise.all([
           loadServerConfig(),
           loadOrCreateIdentity(),
           loadTransportPreference(),
@@ -107,6 +108,12 @@ export function createAccountActions({ set, get }: StoreAccess): AccountActions 
           loadLastConnectedDeviceId(),
           loadDefaultPermissionPreset(),
         ])
+        // Rebrand devices created by the previous "DSH Remote" display name
+        // once; the Host updates its trusted-peer label on the next handshake.
+        const identity = loadedIdentity.name.endsWith('· DSH Remote')
+          ? { ...loadedIdentity, name: loadedIdentity.name.replace(/· DSH Remote$/u, `· ${APP_NAME}`) }
+          : loadedIdentity
+        if (identity !== loadedIdentity) await saveIdentity(identity)
         const language = applyLanguagePreference(languagePreference)
         set({
           config,
@@ -130,7 +137,10 @@ export function createAccountActions({ set, get }: StoreAccess): AccountActions 
 
     async requireReauth(message) {
       await get().disconnect()
-      await clearDeviceCredentials()
+      // Keep the stored device credential until a real re-login replaces it: a
+      // transient server/auth hiccup must not erase a remembered session, and
+      // the next launch can retry the same device credentials. Sign-out/reset
+      // still clear everything explicitly.
       const config = get().config
       const nextConfig = config === undefined
         ? undefined

@@ -164,7 +164,9 @@ describe('account directory operation isolation', () => {
       expect(store.get().refreshing).toBe(false)
       if (name === 'auth-error') {
         expect(store.get().reauthRequired).toBe(true)
-        expect(mocks.storage.clearDeviceCredentials).toHaveBeenCalledOnce()
+        // The stored device credential is kept for a possible retry; only an
+        // explicit sign-out or reset clears it.
+        expect(mocks.storage.clearDeviceCredentials).not.toHaveBeenCalled()
         expect(store.get().disconnect).toHaveBeenCalledOnce()
       } else {
         expect(store.get().devices).toEqual([{ deviceId: 'valid' }])

@@ -53,6 +53,7 @@ import { completedProcessTitle, processDetail, processSegments, toolActivity, to
 import { MessageActions } from '../message-actions'
 import { IntelligentUiCard } from '../intelligent-ui-card'
 import { createStyles } from './styles'
+import { ChatVideoCard } from './videos'
 
 /** Only activity ranges fold; completing a turn must never hide spoken replies. */
 export const ChatProcessGroup = memo(function ChatProcessGroup({ items, artifacts, updatedArtifacts, availableUiIds, busyAction, onApproval, onQuestion }: {
@@ -108,10 +109,11 @@ const ChatActivityGroup = memo(function ChatActivityGroup({ items, closed, busyA
   const body = useRef<ScrollView>(null)
   const pending = items.some(item => (item.kind === 'approval' || item.kind === 'question') && item.outcome === undefined)
   const expanded = pending || open
-  // Generated/tool images are the visible result of the turn; keep them on the
-  // conversation canvas even while the activity details stay collapsed.
-  const collapsedImages = expanded ? [] : items.filter((item): item is ToolActivity =>
-    item.kind === 'tool' && (item.images?.length ?? 0) > 0)
+  // Generated/tool images and video results are the visible result of the
+  // turn; keep them on the conversation canvas even while the activity
+  // details stay collapsed.
+  const collapsedResults = expanded ? [] : items.filter((item): item is ToolActivity =>
+    item.kind === 'tool' && ((item.images?.length ?? 0) > 0 || (item.videos?.length ?? 0) > 0))
   const tools = items.filter((item): item is ToolActivity => item.kind === 'tool')
   const activeTool = closed ? undefined : tools.findLast(item => item.state === 'running')
   const runningReasoning = closed ? undefined : items.findLast(item => item.kind === 'message' && item.streamingPhase === 'reasoning')
@@ -133,7 +135,11 @@ const ChatActivityGroup = memo(function ChatActivityGroup({ items, closed, busyA
       {expanded ? <ChevronUp size={17} color={colors.muted} /> : <ChevronDown size={17} color={colors.muted} />}
       <Text style={styles.processLabel} numberOfLines={1}>{label}{detail === undefined ? '' : ` · ${detail}`}</Text>
     </Pressable>
-    {collapsedImages.map(item => <ChatImages key={`${item.id}:collapsed-images`} images={item.images!} tool />)}
+    {collapsedResults.map(item => item.videos !== undefined && item.videos.length > 0
+      ? item.videos.map((video, index) => (
+        <ChatVideoCard key={`${item.id}:collapsed-video:${index}`} sessionId={item.sessionId} video={video} poster={item.images?.[index]} />
+      ))
+      : <ChatImages key={`${item.id}:collapsed-images`} images={item.images!} tool />)}
     {expanded && <ScrollView ref={body} style={{ maxHeight: Math.min(400, height / 2) }} nestedScrollEnabled
       keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
       onLayout={() => { if (running) body.current?.scrollToEnd({ animated: false }) }}
@@ -326,7 +332,11 @@ function ToolRow({ item, compact }: { item: ToolActivity; compact: boolean }) {
           ? <ChevronDown size={17} color={colors.muted} />
           : <ChevronRight size={17} color={colors.muted} />)}
       </Pressable>
-      {item.images !== undefined && item.images.length > 0 && <ChatImages images={item.images} tool />}
+      {item.videos !== undefined && item.videos.length > 0
+        ? item.videos.map((video, index) => (
+          <ChatVideoCard key={`${item.id}:video:${index}`} sessionId={item.sessionId} video={video} poster={item.images?.[index]} />
+        ))
+        : item.images !== undefined && item.images.length > 0 && <ChatImages images={item.images} tool />}
       {expanded && hasDetail && (
         <View style={styles.toolDetails}>
           {item.callDetail !== undefined && <ToolDetailView label={zhCN.chat.toolCall} detail={item.callDetail} />}

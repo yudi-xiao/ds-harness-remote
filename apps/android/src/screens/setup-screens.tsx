@@ -5,6 +5,7 @@ import { getContentUriAsync } from 'expo-file-system/legacy'
 import * as IntentLauncher from 'expo-intent-launcher'
 import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Check, ChevronRight, Download, ExternalLink, Info, KeyRound, Laptop, LockKeyhole, RotateCcw, Settings, type LucideIcon } from 'lucide-react-native'
+import { APP_NAME, APP_PROTOCOL_LABEL } from '../brand'
 import { useAppStore } from '../state/store'
 import { SOURCE_CODE_URL } from '../lib/links'
 import { BlurHeaderFrame, Button, Field, KeyValue, Screen, TopBar } from '../ui/components'
@@ -67,7 +68,7 @@ export function ServerSetupScreen({ onComplete, onBack }: { onComplete: () => vo
     <View style={styles.flex}>
       <BlurHeaderFrame header={<TopBar title={zhCN.setup.title} onBack={onBack} />}>
         <Screen>
-          <Text style={styles.productName}>DeepSeek Harness Remote</Text>
+          <Text style={styles.productName}>{APP_NAME}</Text>
           <Text style={styles.title}>{config === undefined ? zhCN.setup.signIn : zhCN.setup.signInAgain}</Text>
           <Text style={styles.lead}>{zhCN.setup.lead}</Text>
 
@@ -260,7 +261,7 @@ export function SettingsScreen({ onBack, onReset }: { onBack: () => void; onRese
               <KeyValue label={zhCN.settings.server} value={config?.baseUrl ?? zhCN.settings.notConfigured} />
               <KeyValue label={zhCN.settings.account} value={account ?? zhCN.settings.notSignedIn} />
               <KeyValue label={zhCN.settings.loginMethod} value={loginMethodLabel(config?.loginMethod)} />
-              <KeyValue label={zhCN.settings.protocol} value="DSH Remote v1" />
+              <KeyValue label={zhCN.settings.protocol} value={APP_PROTOCOL_LABEL} />
             </View>
 
             <Text style={styles.groupLabel}>{zhCN.settings.transport}</Text>
@@ -513,7 +514,7 @@ export function AboutScreen({ onBack }: { onBack: () => void }) {
         <Screen>
           <View style={styles.aboutHero}>
             <Image source={require('../../assets/icon.png')} style={styles.aboutLogo} resizeMode="contain" />
-            <Text style={styles.aboutProductName}>DeepSeek Harness Remote</Text>
+            <Text style={styles.aboutProductName}>{APP_NAME}</Text>
             <Text style={styles.aboutVersion}>{versionLabel}</Text>
           </View>
 

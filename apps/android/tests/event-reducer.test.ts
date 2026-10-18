@@ -600,5 +600,73 @@ describe('remote mux frame reducer', () => {
       images: [{ uri: 'data:image/jpeg;base64,iVBORw0KGgo=' }],
     })
   })
+  it('projects workspace video results and keeps their cover image separate', () => {
+    const metadata = {
+      workspace_relative_path: '_scratch/videos/clip-42.mp4',
+      cover_relative_path: '_scratch/videos/clip-42.jpg',
+      video_url: 'http://127.0.0.1:18080/outputs/videos/clip-42.mp4',
+      output_path: 'C:\\outputs\\videos\\clip-42.mp4',
+      width: 960,
+      height: 544,
+      duration_seconds: 4.5,
+      bytes: 123456,
+    }
+    const events = [
+      sessionEvent({ type: 'tool/call', seq: 1, time: 1000, data: { turn: 1, name: 'generate_video', callId: 'call-video' } }),
+      sessionEvent({
+        type: 'tool/result',
+        seq: 2,
+        time: 1100,
+        data: {
+          turn: 1,
+          message: {
+            id: 'tool-video',
+            role: 'tool',
+            toolCallId: 'call-video',
+            source: { kind: 'tool', callId: 'call-video' },
+            content: [
+              { type: 'text', text: JSON.stringify(metadata) },
+              { type: 'image', attachment: { attachmentId: 'sha256:cover', mediaType: 'image/jpeg', width: 640, height: 363 } },
+            ],
+          },
+        },
+      }),
+      sessionEvent({ type: 'tool/call', seq: 3, time: 1200, data: { turn: 1, name: 'generate_video', callId: 'call-video-unsafe' } }),
+      sessionEvent({
+        type: 'tool/result',
+        seq: 4,
+        time: 1300,
+        data: {
+          turn: 1,
+          message: {
+            id: 'tool-video-unsafe',
+            role: 'tool',
+            toolCallId: 'call-video-unsafe',
+            source: { kind: 'tool', callId: 'call-video-unsafe' },
+            content: [{ type: 'text', text: JSON.stringify({ ...metadata, workspace_relative_path: '../clip-42.mp4' }) }],
+          },
+        },
+      }),
+    ]
+    const items = foldHistory(events.map(event => ({ event })), 's1')
+    expect(items[0]).toMatchObject({
+      kind: 'tool',
+      toolKey: 'generate_video',
+      state: 'finished',
+      images: [{ attachmentId: 'sha256:cover', mediaType: 'image/jpeg', width: 640, height: 363 }],
+      videos: [{
+        workspacePath: '_scratch/videos/clip-42.mp4',
+        coverPath: '_scratch/videos/clip-42.jpg',
+        mediaType: 'video/mp4',
+        width: 960,
+        height: 544,
+        durationSeconds: 4.5,
+        bytes: 123456,
+        title: 'clip-42',
+      }],
+    })
+    expect(items[1]).toMatchObject({ kind: 'tool', toolKey: 'generate_video', state: 'finished' })
+    expect((items[1] as { videos?: unknown }).videos).toBeUndefined()
+  })
 
 })
