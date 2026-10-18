@@ -49,7 +49,9 @@ RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真
 - [x] 发布自动重连 OTA（group `05d48ccf-e18d-4f96-9366-651b3e53ec04`，id `01a15076-1ee8-7cb7-b9f5-04e049556c28`），公网 manifest 校验通过。
 - [x] 移除聊天底部加密提示、快捷提示词入口与右上角新对话图标；侧边栏顶部新增不绑定工作区的新对话，每个工作区分组标题新增 `+`（含空工作区）。
 - [x] 输入法弹出时 prompt 输入框动态占满键盘上方可用区域，关闭后恢复常规高度；Android check 与 27 文件 / 148 测试通过。
-- [x] 发布界面 OTA（group `fe4bc267-6309-45e0-8ef1-d0d84fa65691`，id `01a1507b-7ef5-7050-8708-24608c12eaed`），公网 manifest 校验通过。OTA group `b5fb2240-0a3f-4fde-a83e-8f693e146270`（id `01a15067-07c5-746a-9b54-288c8a69efd1`），Android check 与 26 文件 / 146 测试通过。
+- [x] 发布界面 OTA（group `fe4bc267-6309-45e0-8ef1-d0d84fa65691`，id `01a1507b-7ef5-7050-8708-24608c12eaed`），公网 manifest 校验通过。
+- [x] 移除关于页与 GitHub/作者信息、移除侧边栏“当前工作”分组；选中会话改为蓝色底 + 白色标题；设备列表和登录页底部显示版本号。
+- [x] 发布 About/侧边栏 OTA（group `136979c2-b29b-48c8-a5f7-c884cdffdd13`，id `01a15088-fb7e-7b8e-af02-cb4c766ea95e`），Android check 与 27 文件 / 148 测试通过。OTA group `b5fb2240-0a3f-4fde-a83e-8f693e146270`（id `01a15067-07c5-746a-9b54-288c8a69efd1`），Android check 与 26 文件 / 146 测试通过。
 - [x] 个人文档新增本地 Saluki 优化建议（prompt cache、context/compaction、输出上限、工具面、GPU 串行、llama.cpp 参数核对）。
 - [ ] 可选：按建议调整 `local-saluki` 的 `maxTokens`/压缩阈值，或在本机会话中验证指标随本地模型实时更新。
 

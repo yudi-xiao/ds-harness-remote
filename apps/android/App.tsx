@@ -6,7 +6,7 @@ import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChatScreen } from './src/screens/chat-screen'
 import { ConnectionScreen, DeviceDetailScreen, DevicesScreen } from './src/screens/device-screens'
-import { AboutScreen, HomeActionsMenu, ServerSetupScreen, SettingsScreen } from './src/screens/setup-screens'
+import { HomeActionsMenu, ServerSetupScreen, SettingsScreen } from './src/screens/setup-screens'
 import { WorkspacesScreen } from './src/screens/workspaces-screen'
 import { APP_NAME } from './src/brand'
 import { useAppStore } from './src/state/store'
@@ -31,7 +31,6 @@ type Route =
   | { name: 'workspaces'; focusWorkspaceKey?: string }
   | { name: 'chat' }
   | { name: 'settings' }
-  | { name: 'about' }
 
 export default function App() {
   const locales = useLocales()
@@ -321,7 +320,6 @@ function AppNavigator() {
       />}
       {route.name === 'chat' && <ChatScreen onBack={pop} onOpenDevices={() => reset({ name: 'devices' })} onOpenWorkspaces={focusWorkspaceKey => push({ name: 'workspaces', focusWorkspaceKey })} />}
       {route.name === 'settings' && <SettingsScreen onBack={pop} onReset={() => reset({ name: 'server' })} />}
-      {route.name === 'about' && <AboutScreen onBack={pop} />}
       <HomeActionsMenu
         visible={homeMenuVisible}
         onClose={() => setHomeMenuOpen(false)}
@@ -334,10 +332,6 @@ function AppNavigator() {
         onSettings={() => {
           setHomeMenuOpen(false)
           push({ name: 'settings' })
-        }}
-        onAbout={() => {
-          setHomeMenuOpen(false)
-          push({ name: 'about' })
         }}
       />
     </View>

@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics'
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, BackHandler, Easing, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Archive, ArrowLeft, ChevronRight, CircleCheck, Code2, Laptop, MessageSquareText, MoreVertical, Pencil, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react-native'
 import { APP_NAME } from '../brand'
+import { appVersionLabel } from '../lib/app-version'
 import { useAppStore } from '../state/store'
 import type { ConnectionProbeTransport, ConnectionStage, RemoteDevice, RemoteSession, WorkspaceShortcut } from '../types'
 import { workspaceStableKey } from '../lib/workspace-key'
@@ -181,6 +182,7 @@ export function DevicesScreen({ onDevice, onBack, onMore, onShortcut }: {
       {isHome && (
         <View style={styles.homeFooter}>
           <Text style={styles.homeFooterText}>{zhCN.devices.footer}</Text>
+          <Text style={styles.homeVersion}>{appVersionLabel()}</Text>
         </View>
       )}
     </View>
@@ -1095,6 +1097,7 @@ function createStyles(colors: ThemeColors) {
   subtitle: { ...type.small, color: colors.muted, marginTop: 2 },
   homeFooter: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.md },
   homeFooterText: { ...type.small, color: colors.muted, textAlign: 'center' },
+  homeVersion: { ...type.caption, color: colors.muted, textAlign: 'center', marginTop: 2, opacity: 0.8 },
   favoriteLinks: { gap: spacing.xxs },
   favoriteRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   // Two fixed columns so the "· machine" text starts at the same x on every row.

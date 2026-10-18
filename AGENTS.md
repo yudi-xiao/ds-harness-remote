@@ -635,6 +635,10 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   控制心跳，超过 `max(90s, 4×interval)` 判定半开并主动重建；重连窗口内保持前台服务，
   显式断开/认证失败才停止。新增 `src/state/reconnect-policy.ts` 与 2 个策略测试。OTA
   `05d48ccf-e18d-4f96-9366-651b3e53ec04`（id `01a15076-1ee8-7cb7-b9f5-04e049556c28`）。
+- 关于页与侧边栏（2026-10-19）：移除 About 页、GitHub 开源/更新/作者信息与 GitHub release 检查更新；
+  侧边栏移除“当前工作”分组，选中会话使用主题蓝底、白色标题/图标。设备列表与登录页底部显示
+  `appVersionLabel()` 版本小字。OTA `136979c2-b29b-48c8-a5f7-c884cdffdd13`
+  （id `01a15088-fb7e-7b8e-af02-cb4c766ea95e`）。
 - 聊天界面整理（2026-10-19）：移除底部加密提示、快捷提示词入口与右上角新对话图标；侧边栏
   顶部新增不绑定工作区的“新对话”（`session.create` 不传 workspaceId），每个工作区分组标题
   新增 `+` 并在空工作区显示提示。`KeyboardInset` 新增 `useKeyboardInsetState`，IME 可见时

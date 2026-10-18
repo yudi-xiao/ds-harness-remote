@@ -242,6 +242,14 @@ Android 会话标题下方新增一行紧凑指标，数据全部来自 Host 官
 - 验证：Android check 与 27 文件 / 148 测试通过。
 - OTA：group `fe4bc267-6309-45e0-8ef1-d0d84fa65691`，id `01a1507b-7ef5-7050-8708-24608c12eaed`。
 
+## 关于页、侧边栏与版本号（2026-10-19）
+
+- 移除“关于”页、首页菜单中的关于入口，以及 GitHub 开源/更新检查和作者信息；同时移除基于 GitHub release 的检查更新流程（个人 App 使用 EAS Update，不再显示上游 GitHub 信息）。
+- 侧边栏移除“当前工作”分组；当前选中会话使用主题蓝色背景、标题与图标为白色，`Check` 标记同样为白色。
+- 首次进入（设备列表）底部和登录页底部新增小字号版本号 `v0.7.0 (52)`（`appVersionLabel()`，跟随构建）。
+- 验证：Android check 与 27 文件 / 148 测试通过。
+- OTA：group `136979c2-b29b-48c8-a5f7-c884cdffdd13`，id `01a15088-fb7e-7b8e-af02-cb4c766ea95e`。
+
 ## 安全与维护
 
 - 不提交：`keystore`、`credentials.json`、`.env`、`.dev.vars`、`.wrangler/`、`.tmp/`、`_scratch/`。
