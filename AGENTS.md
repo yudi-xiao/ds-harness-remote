@@ -608,7 +608,7 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   （140,387,455 bytes，SHA-256 `1F9EECA14F0141B5361356D9EBC6561D4F1BDB0D6ED1A8C591A2231EFCFD991C`）。
   解包校验：Hermes bundle 含 `DSH Remote Agent`/`workspace_relative_path`/`cover_relative_path`/
   `video/mp4`/`chat-videos`，`classes3.dex` 含 `expo-video`/`ExpoVideo`/`expo.modules.video`。
-- 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、24 文件 / 137 测试、
+- 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、25 文件 / 141 测试、
   `expo config --type prebuild` 与 Hermes bundle 导出通过；新增视频结果投影核心测试。
   0.7.0 EAS Update 已发布到 `preview`（group `a0c861df-5a03-488a-8029-145f823eadc3`，
   id `01a15012-b191-7a0c-8ca7-4816264dfdc3`），公网 manifest 对 runtime `0.7.0` 返回该更新。
