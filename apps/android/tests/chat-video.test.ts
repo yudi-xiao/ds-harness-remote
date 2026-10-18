@@ -58,7 +58,7 @@ const video: ChatVideo = {
 interface ChunkLike {
   offset: number
   bytes?: number
-  data: string
+  data: string | Uint8Array
   eof: boolean
 }
 
@@ -70,7 +70,9 @@ function fakeTools(payload: Uint8Array, statBytes: number | undefined = payload.
       return {
         offset,
         ...(statBytes === undefined ? {} : { bytes: statBytes }),
-        data: Buffer.from(slice).toString('base64'),
+        // client-core's RemoteTypertGateway reconstructs readBytes binary
+        // fields as Uint8Array before the app sees the result.
+        data: slice,
         eof: offset + slice.byteLength >= payload.length,
       }
     }),
@@ -118,6 +120,18 @@ describe('workspace chat video playback', () => {
     const tools = fakeTools(payload)
     tools.readBytes.mockResolvedValueOnce({ offset: 0, bytes: 16, data: 'not-base64!', eof: true })
     await expect(downloadChatVideo(tools as never, 's', video)).rejects.toMatchObject({ code: CHAT_VIDEO_INVALID })
+  })
+
+  it('also accepts legacy base64 chunks from raw carriers', async () => {
+    const payload = new Uint8Array(64).fill(5)
+    const tools = fakeTools(payload)
+    tools.readBytes.mockResolvedValueOnce({
+      offset: 0,
+      bytes: payload.length,
+      data: Buffer.from(payload).toString('base64'),
+      eof: true,
+    })
+    await expect(downloadChatVideo(tools as never, 'legacy-session', video)).resolves.toMatchObject({ bytes: 64 })
   })
 
   it('rejects a video whose version changes while it is being read', async () => {

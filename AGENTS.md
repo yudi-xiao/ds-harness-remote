@@ -608,8 +608,14 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   （140,387,455 bytes，SHA-256 `1F9EECA14F0141B5361356D9EBC6561D4F1BDB0D6ED1A8C591A2231EFCFD991C`）。
   解包校验：Hermes bundle 含 `DSH Remote Agent`/`workspace_relative_path`/`cover_relative_path`/
   `video/mp4`/`chat-videos`，`classes3.dex` 含 `expo-video`/`ExpoVideo`/`expo.modules.video`。
-- 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、25 文件 / 141 测试、
-  `expo config --type prebuild` 与 Hermes bundle 导出通过；新增视频结果投影核心测试。
-  0.7.0 EAS Update 已发布到 `preview`（group `a0c861df-5a03-488a-8029-145f823eadc3`，
-  id `01a15012-b191-7a0c-8ca7-4816264dfdc3`），公网 manifest 对 runtime `0.7.0` 返回该更新。
-  0.7.0 APK 已构建完成；真机视频播放/登录保持/新品牌图标仍待验收。
+- 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、25 文件 / 142 测试、
+  `expo config --type prebuild` 与 Hermes bundle 导出通过；新增视频结果投影与分块传输核心测试。
+- 真机首测发现视频播放报“视频文件不在会话工作区中”：client-core 的 `RemoteTypertGateway`
+  会把 `workspaceFiles/readBytes` 的二进制 `data` 还原成 `Uint8Array`，而首版 `chat-video.ts`
+  只接受 base64 字符串。`parseChunk` 现同时接受 `Uint8Array` 与 legacy base64，并新增测试；
+  修复以 JS-only OTA 发布（无需重装 APK）。
+- 0.7.0 EAS Update 已发布到 `preview`（runtime `0.7.0`）：首个 `a0c861df-5a03-488a-8029-145f823eadc3`
+  （id `01a15012-b191-7a0c-8ca7-4816264dfdc3`），二进制分块修复
+  `8ac8104e-4fd4-467a-b421-ee18f86ae39f`（id `01a15022-7633-7606-83d3-ba305eb4017d`）；
+  公网 manifest 返回最新更新。0.7.0 APK 已构建/安装，登录保持与新品牌已通过真机确认；
+  视频播放待拉取 OTA 修复后复测。

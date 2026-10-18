@@ -165,16 +165,21 @@ function hash(value: string): string {
 function parseChunk(value: unknown): { offset: number; data: Uint8Array; eof: boolean; totalBytes?: number } {
   if (!isRecord(value)) throw videoError(CHAT_VIDEO_INVALID, 'The Host returned an invalid video chunk.')
   const offset = value.offset
-  const data = value.data
+  const raw = value.data
   const eof = value.eof
   const totalBytes = value.bytes
   if (typeof offset !== 'number' || !Number.isSafeInteger(offset) || offset < 0) throw videoError(CHAT_VIDEO_INVALID, 'The video chunk offset is invalid.')
-  if (typeof data !== 'string' || !CANONICAL_BASE64.test(data) || data.length % 4 !== 0) throw videoError(CHAT_VIDEO_INVALID, 'The video chunk is not canonical base64.')
+  // client-core's RemoteTypertGateway already reconstructs binary RPC fields
+  // (workspaceFiles/readBytes `data`) as Uint8Array; legacy/raw carriers may
+  // still deliver canonical base64, so support both shapes.
+  let bytes: Uint8Array
+  if (raw instanceof Uint8Array) bytes = raw
+  else if (typeof raw === 'string' && CANONICAL_BASE64.test(raw) && raw.length % 4 === 0) bytes = base64Bytes(raw)
+  else throw videoError(CHAT_VIDEO_INVALID, 'The video chunk payload is invalid.')
   if (typeof eof !== 'boolean') throw videoError(CHAT_VIDEO_INVALID, 'The video chunk is missing its EOF flag.')
   if (totalBytes !== undefined && (typeof totalBytes !== 'number' || !Number.isSafeInteger(totalBytes) || totalBytes < 0)) {
     throw videoError(CHAT_VIDEO_INVALID, 'The video chunk size hint is invalid.')
   }
-  const bytes = base64Bytes(data)
   if (bytes.byteLength > CHAT_VIDEO_CHUNK_BYTES) throw videoError(CHAT_VIDEO_INVALID, 'The video chunk exceeds the requested size.')
   return { offset, data: bytes, eof, ...(totalBytes === undefined ? {} : { totalBytes }) }
 }
