@@ -571,5 +571,7 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
 含 v2/v3 签名块与 arm64-v8a/armeabi-v7a 原生库，解包后 `assets/index.android.bundle`
 含 `session/attachment`、个人 Server URL/账号与 `attachmentId`）；首个 EAS Update 已发布
 （`preview`，group `cf4a86d0-6519-4228-b3fd-73cb8fe6e5ea`，runtime `0.6.0`），公网
-`u.expo.dev` manifest 对该 runtime/channel 返回已发布更新。真机安装与会话图片回显的
-真机验收仍待确认。
+`u.expo.dev` manifest 对该 runtime/channel 返回已发布更新。真机验收通过（2026-10-19）：
+新 Agent 已安装并登录，Server 设备 `3023a87f-8dcb-4525-9037-76354daaabf7`
+（clientVersion `0.6.0`，online），Host 信任列表已更新；用户确认会话内可直接看到
+工具结果图片（历史图片与 `read_image` 结果）。对应改动已本地提交 `16606d0`（未推送）。

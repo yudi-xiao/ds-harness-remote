@@ -13,6 +13,7 @@
   - 大小 136,257,561 bytes；SHA-256 `438E08B58EAAC0A0334ABFC9DC12AB2DCDE700ACD4E22E9E39A698406A25F177`
 - 已校验 APK 内 `assets/index.android.bundle` 含 `session/attachment`、个人 Server URL/账号、`attachmentId` 与 `com.howlearnwood.agent`，即安装包已包含会话图片回显逻辑。
 - 已校验 EAS Update 公网 manifest：`https://u.expo.dev/61c55e4e-03c6-4faa-b7b7-dd9ac3f92175` 在 `expo-platform: android`、`expo-runtime-version: 0.6.0`、`expo-channel-name: preview` 下返回 `01a14fda-2087-7d8f-9502-5059721c8c5b`。
+- **真机验收通过（2026-10-19）**：新 Agent 已安装并登录，Server 设备 `3023a87f-8dcb-4525-9037-76354daaabf7`（clientVersion `0.6.0`，online）；用户确认会话内可直接看到工具结果图片（含历史图片与 `read_image` 结果）。对应改动已本地提交 `16606d0`（未推送）。
 - 安装：新包名/签名与旧 `DSH Remote` 不同，因此可以与旧 App 共存，无需先卸载；建议安装 `Agent` 并完成登录后卸载旧 App。首次打开登录页 Server/账号已预填，输入个人 Server 密码登录。
 - **首次 EAS Update 已发布**（`preview` 分支）：update group `cf4a86d0-6519-4228-b3fd-73cb8fe6e5ea`，runtimeVersion `0.6.0`，manifest <https://u.expo.dev/update/01a14fda-2087-7d8f-9502-5059721c8c5b>。App 启动后会按 channel 拉取该更新（内容与内置 bundle 相同，用于验证通道）。
 

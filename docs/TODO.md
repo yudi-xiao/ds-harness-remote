@@ -22,8 +22,10 @@ RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真
 - [x] 首次 EAS Update 发布到 `preview` 分支（group `cf4a86d0-6519-4228-b3fd-73cb8fe6e5ea`，runtime `0.6.0`，update manifest `01a14fda-2087-7d8f-9502-5059721c8c5b`）。
 - [x] 校验 APK 内的 Hermes bundle 含 `session/attachment`、个人 Server URL/账号、`attachmentId` 与 `com.howlearnwood.agent`；`AndroidManifest.xml` 与 `assets/index.android.bundle` 均在包内。
 - [x] 校验 EAS Update 公网 manifest（`u.expo.dev/<projectId>`，`expo-platform: android` / `runtimeVersion 0.6.0` / `channel preview`）返回已发布更新 `01a14fda-2087-7d8f-9502-5059721c8c5b`。
-- [ ] 真机安装新 APK 并验证会话内图片回显。
-- [ ] 真机确认 OTA 拉取/回滚，以及 Cloudflare 个人 Server/Host/手机首次登录流程。
+- [x] 真机安装新 APK 并验证会话内图片回显：新 Agent 已在手机上安装，用户确认会话内可直接看到工具结果图片（含历史图片与 `read_image` 结果）。
+- [x] 个人 Server 登录与新设备连接：Server 设备 `3023a87f-8dcb-4525-9037-76354daaabf7`（clientVersion `0.6.0`，online），Host 信任列表已更新。
+- [x] 本地提交（未推送）：commit `16606d0`，含图片回显、个人 EAS/Expo 构建体系与流程文档。
+- [ ] 真机确认 EAS Update 实际拉取/回滚（已在公网 manifest 校验通道可用）。
 
 ## 2026-10-18 版本审查后续
 
