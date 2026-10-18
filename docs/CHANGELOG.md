@@ -14,6 +14,8 @@
 - 将个人 Android 客户端品牌统一为 `DSH Remote Agent`：新自适应图标、启动屏与可见 UI 文案；重启后保持登录，认证异常不再立即清除设备凭据（显式退出/重置仍会清除），并把旧 `… · DSH Remote` 设备名迁移为新品牌。
 - Adds in-session video results with `expo-video`: the Host H3 tool copies the generated MP4 and first-frame cover into the session workspace and reports their workspace-relative paths plus a native cover image; Android renders a poster + play card and streams the MP4 lazily through the official read-only `workspaceFiles/readBytes` scope (512 KiB chunks, ≤ 120 MiB) into an app-cache file played full-screen with expo-video.
 - Android 会话新增 `expo-video` 视频结果：Host 的 H3 工具把 MP4 与首帧封面复制到会话工作区并返回工作区相对路径与原生封面图片；Android 显示封面 + 播放按钮，点击时经官方只读 `workspaceFiles/readBytes` 分块拉取（512 KiB/块，≤ 120 MiB）到 App 缓存，再用 expo-video 全屏播放。
+- Validation: Android check, 24 files / 137 tests, `expo config --type prebuild` and the Hermes bundle export pass. The 0.7.0 preview APK build `b4f03830-186c-4861-ae9f-37c9ad8c6599` finished (140,387,455 bytes, SHA-256 `1F9EECA1…EFCFD991C`); its Hermes bundle contains `DSH Remote Agent`/`workspace_relative_path`/`cover_relative_path`/`video/mp4`/`chat-videos` and `classes3.dex` contains the expo-video native module. On-device install/video playback/login persistence and the 0.7.0 EAS Update remain pending.
+- 验证：Android check、24 文件 / 137 测试、`expo config --type prebuild` 与 Hermes bundle 导出通过；0.7.0 preview APK 构建 `b4f03830-186c-4861-ae9f-37c9ad8c6599` 完成（140,387,455 bytes，SHA-256 `1F9EECA1…EFCFD991C`）；其 Hermes bundle 含 `DSH Remote Agent`/`workspace_relative_path`/`cover_relative_path`/`video/mp4`/`chat-videos`，`classes3.dex` 含 expo-video 原生模块。真机安装/视频播放/登录保持与 0.7.0 EAS Update 仍待验收。
 
 ## 0.5.12 - 2026-10-18
 

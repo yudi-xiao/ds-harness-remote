@@ -22,7 +22,12 @@
 - **品牌统一**：显示名/启动页/登录页/设备页/关于页/安全横幅统一为 `DSH Remote Agent`；新增本地图标（深海军蓝 + 青色互联六边形节点），适配 Android 自适应图标与启动屏；旧设备名 `… · DSH Remote` 在启动时一次性迁移为 `… · DSH Remote Agent`。
 - **记住登录**：设备凭据继续保存在 `expo-secure-store`；认证异常不再立即删除设备凭据，下次启动仍可用原凭据重试，只有显式“退出登录/重置”才清空。重启 App 后直接进入设备列表，无需重新输入密码。
 - **会话内视频**：新增 `expo-video`。Host 端 H3 视频工具新增 `workspace_dir` 参数：生成后把 MP4 与首帧 JPEG 封面复制到 `<session workspace>/_scratch/videos/`，结果里返回 `workspace_relative_path` / `cover_relative_path` 并把封面作为原生图片附件返回。Android 会话显示“封面 + 播放按钮”卡片；点播放时才经官方只读 `workspaceFiles/readBytes` 分块拉取（≤ 120 MiB，512 KiB/块），写入 App 缓存后用 expo-video 全屏播放，历史不会自动下载视频字节。
-- **构建**：`version 0.7.0` / `versionCode 52`，运行时版本 `0.7.0`。新 APK 构建 `b4f03830-186c-4861-ae9f-37c9ad8c6599`（preview）；`expo-video` 是原生模块，必须重新构建/安装 APK；旧 `0.6.0` 的 EAS Update 不会下发到 `0.7.0`。
+- **构建**：`version 0.7.0` / `versionCode 52`，运行时版本 `0.7.0`。新 APK 构建 `b4f03830-186c-4861-ae9f-37c9ad8c6599`（preview，FINISHED）：
+  - APK 直链：<https://expo.dev/artifacts/eas/NQumxj6sQc5E2wXXmsQR_d6sh8Ty8NgJs55qZ0IXf0E.apk>
+  - 构建页：<https://expo.dev/accounts/shuohigh/projects/dsh-agent/builds/b4f03830-186c-4861-ae9f-37c9ad8c6599>
+  - 大小 140,387,455 bytes；SHA-256 `1F9EECA14F0141B5361356D9EBC6561D4F1BDB0D6ED1A8C591A2231EFCFD991C`；同包名/同签名，可直接覆盖安装并保留登录数据。
+  - 已解包校验：`assets/index.android.bundle` 含 `DSH Remote Agent`、`workspace_relative_path`、`cover_relative_path`、`video/mp4`、`chat-videos`；`classes3.dex` 含 `expo-video` / `ExpoVideo` / `expo.modules.video`，说明原生视频模块已编入。
+  - 旧 `0.6.0` 的 EAS Update 不会下发到 `0.7.0`；`expo-video` 是原生模块，必须重新安装 APK。
 - **Host 侧前置条件**：本机 H3 工具已支持 `workspace_dir`（`C:\Users\shuoh\WebstormProjects\LLM\integrations\dsh\local-tools-mcp.cjs` + `media-result.cjs` + `services/h3-comfy.cjs` / `model-scheduler.cjs` / `services/inspect-video.py`，用 `runtime\h3-env` 的 PyAV 抽首帧）。模型需在调用 `generate_video` 时把当前会话工作区作为 `workspace_dir` 传入；MCP 进程需在 DSH 新会话中重启后才会暴露新参数。
 
 ## 组成

@@ -602,8 +602,12 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   `services/inspect-video.py` 用 `runtime\h3-env` 的 PyAV/Pillow 抽首帧，`h3-comfy.cjs` 与
   `model-scheduler.cjs` 生成 `.jpg` sidecar。MCP schema 变更需新 DSH 会话生效。
 - 版本：`runtimeVersion.policy = appVersion`，当前 `0.7.0`；0.6.0 已发布的 OTA 不会下发到
-  0.7.0。`expo-video` 是原生模块，必须重新构建/安装 APK（preview build
-  `b4f03830-186c-4861-ae9f-37c9ad8c6599`）。
+  0.7.0。`expo-video` 是原生模块，必须重新构建/安装 APK：最终 preview build
+  `b4f03830-186c-4861-ae9f-37c9ad8c6599` 已 FINISHED，APK
+  <https://expo.dev/artifacts/eas/NQumxj6sQc5E2wXXmsQR_d6sh8Ty8NgJs55qZ0IXf0E.apk>
+  （140,387,455 bytes，SHA-256 `1F9EECA14F0141B5361356D9EBC6561D4F1BDB0D6ED1A8C591A2231EFCFD991C`）。
+  解包校验：Hermes bundle 含 `DSH Remote Agent`/`workspace_relative_path`/`cover_relative_path`/
+  `video/mp4`/`chat-videos`，`classes3.dex` 含 `expo-video`/`ExpoVideo`/`expo.modules.video`。
 - 验证：Android `check`（renderer + workspace 数据面 + `tsc --noEmit`）、24 文件 / 137 测试、
   `expo config --type prebuild` 与 Hermes bundle 导出通过；新增视频结果投影核心测试。
-  0.7.0 APK 构建结果、真机视频播放/登录保持/新品牌图标与 0.7.0 OTA 发布仍待验收。
+  0.7.0 APK 已构建完成；真机视频播放/登录保持/新品牌图标与 0.7.0 OTA 发布仍待验收。

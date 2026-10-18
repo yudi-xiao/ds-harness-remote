@@ -33,7 +33,7 @@ RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真
 - [x] 登录状态保持：设备凭据保存在 SecureStore；认证异常不再立即删除凭据，显式退出/重置才清除；重启后进入设备列表。
 - [x] 引入 `expo-video`，会话内显示 Host 视频结果：Host MCP `generate_video` 支持 `workspace_dir`，复制 MP4 + 首帧 JPEG 到 `_scratch/videos/` 并返回 `workspace_relative_path`/`cover_relative_path` + 原生封面；Android 封面+播放按钮、点击分块读取 `workspaceFiles/readBytes`、App 缓存播放。
 - [x] 版本 `0.7.0` / `versionCode 52` / runtimeVersion `0.7.0`；Android check 与 24 文件 / 137 测试通过；Hermes bundle 导出通过。
-- [ ] EAS 构建 0.7.0 preview APK（build `b4f03830-186c-4861-ae9f-37c9ad8c6599`）完成并安装到手机。
+- [x] EAS 构建 0.7.0 preview APK 完成（build `b4f03830-186c-4861-ae9f-37c9ad8c6599`，APK <https://expo.dev/artifacts/eas/NQumxj6sQc5E2wXXmsQR_d6sh8Ty8NgJs55qZ0IXf0E.apk>，140,387,455 bytes，SHA-256 `1F9EECA14F0141B5361356D9EBC6561D4F1BDB0D6ED1A8C591A2231EFCFD991C`）；已解包确认 bundle 含品牌/视频路径字段、`classes3.dex` 含 expo-video。
 - [ ] 真机验证：视频封面/播放/全屏、登录重启保持、新图标与 `DSH Remote Agent` 名称。
 - [ ] 为 runtime `0.7.0` 发布 EAS Update 并验证 OTA。
 
