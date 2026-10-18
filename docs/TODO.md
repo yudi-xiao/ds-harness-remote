@@ -36,7 +36,9 @@ RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真
 - [x] EAS 构建 0.7.0 preview APK 完成（build `b4f03830-186c-4861-ae9f-37c9ad8c6599`，APK <https://expo.dev/artifacts/eas/NQumxj6sQc5E2wXXmsQR_d6sh8Ty8NgJs55qZ0IXf0E.apk>，140,387,455 bytes，SHA-256 `1F9EECA14F0141B5361356D9EBC6561D4F1BDB0D6ED1A8C591A2231EFCFD991C`）；已解包确认 bundle 含品牌/视频路径字段、`classes3.dex` 含 expo-video。
 - [x] 为 runtime `0.7.0` 发布 EAS Update（`preview`，group `a0c861df-5a03-488a-8029-145f823eadc3`，manifest `01a15012-b191-7a0c-8ca7-4816264dfdc3`），公网 manifest 校验通过。
 - [x] 修复真机视频播放报“视频不在工作区”：`workspaceFiles/readBytes` 经 client-core 返回的 `data` 是 `Uint8Array` 而非 base64；解析现同时支持两种形态，并发布 JS-only OTA（group `8ac8104e-4fd4-467a-b421-ee18f86ae39f`，id `01a15022-7633-7606-83d3-ba305eb4017d`）；新增对应单测。
-- [ ] 真机重新拉取 OTA 后验证视频封面/播放/全屏，以及 0.7.0 OTA 实际拉取。
+- [x] 关于页新增运行版本 / 更新 ID / Bundle 来源，便于真机确认 OTA 是否生效。
+- [x] 发布包含视频分块修复与 About 诊断的 OTA（group `d05f1573-812f-4c3a-8405-341471e75d06`，id `01a15024-458f-7cf7-b051-fa404519c646`）；公网 manifest 校验通过。
+- [ ] 真机重新拉取 OTA 后验证视频封面/播放/全屏（从关于页确认更新 ID 为 `01a15024-…`）。
 
 ## 2026-10-18 版本审查后续
 

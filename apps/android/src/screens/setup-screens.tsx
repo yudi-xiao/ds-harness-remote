@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import * as Application from 'expo-application'
+import * as Updates from 'expo-updates'
 import { File, Paths } from 'expo-file-system'
 import { getContentUriAsync } from 'expo-file-system/legacy'
 import * as IntentLauncher from 'expo-intent-launcher'
@@ -516,6 +517,12 @@ export function AboutScreen({ onBack }: { onBack: () => void }) {
             <Image source={require('../../assets/icon.png')} style={styles.aboutLogo} resizeMode="contain" />
             <Text style={styles.aboutProductName}>{APP_NAME}</Text>
             <Text style={styles.aboutVersion}>{versionLabel}</Text>
+          </View>
+
+          <View style={styles.group}>
+            <KeyValue label={zhCN.settings.runtimeVersion} value={Updates.runtimeVersion ?? zhCN.common.unavailable} />
+            <KeyValue label={zhCN.settings.updateId} value={Updates.updateId === null ? zhCN.settings.embeddedUpdate : shorten(Updates.updateId)} />
+            <KeyValue label={zhCN.settings.embeddedLaunch} value={zhCN.settings.embeddedLaunchValue(Updates.isEmbeddedLaunch)} />
           </View>
 
           <View style={styles.group}>
