@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dsh-remote-server",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "assets": {
+    "directory": "../server/dist/public",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": true
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "REMOTE",
+        "class_name": "RemoteGateway"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RemoteGateway"]
+    }
+  ],
+  "vars": {
+    "DSH_SERVER_ACCOUNT": "owner@example.com",
+    "DSH_SERVER_PUBLIC_URL": "http://localhost:8787"
+  },
+  "dev": {
+    "port": 8787
+  },
+  "observability": {
+    "enabled": true
+  }
+}

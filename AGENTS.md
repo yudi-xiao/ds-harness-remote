@@ -11,6 +11,7 @@
 - VS Code Client（账号授权 + Host 信任固定 + rc.2 ApiProxy / v0.1.2 alpha.1–rc.1 / v0.1.5 rc.1 与 v0.1.6 alpha.1 Session V3 Typert Remote 会话/Prompt）
 - Protocol、Crypto、WebRTC、Client Core 等共享能力
 - 开源自部署 Server（`apps/server`）：环境变量单账号、JSON 文件持久化设备凭据、Control/Noise handshake forwarding/opaque Relay、Web 登录与设备状态页，以及 Dockerfile/Compose 部署入口
+- Cloudflare Workers 版开源自部署 Server（`apps/server-cf`）：单 Worker + SQLite-backed Durable Object + Workers Assets，保持与 `apps/server` 相同的 REST/设备认证/Control+Noise Relay 协议；Web 登录与设备状态页复用 `apps/server/web` 产物
 - 依赖外部 Server 的 Mock Host/Smoke Client
 - Server 设计与跨仓库协议契约
 
@@ -30,6 +31,7 @@ apps/
   vscode/              VS Code Extension Client（Host 列表、加密连接与远程会话）
   browser/             Chrome/Edge MV3 入口（Web 授权换取独立凭证 + 在线 Host + 打开 Remote Web）
   server/              开源自部署 Server（单账号 Relay、登录/设备状态页、Docker 部署）
+  server-cf/           Cloudflare Workers + Durable Objects 自部署 Server（Worker 路由、DO 中继、Workers Assets）
 packages/
   plugin/              Host runtime、Remote 工作区入口与原生 API 代理
   protocol/            Remote/Control frame 类型和运行时校验
@@ -74,6 +76,7 @@ Plugin bundle 构建统一 esbuild 的依赖模块路径标签，避免 pnpm iso
 | Mock Host | 旧 Android Remote RPC 联调工具，当前冻结 | 若恢复 Android 再迁移或替换 |
 | Desktop | Host 设置、Remote 工作区模态框、远程 Header、连接链路与加密状态已接入 Harness Web UI，Host status 由 loopback SSE 推送（无固定间隔的 status 轮询），原生窗口跨机 E2E 已验证 | 多窗口、休眠/唤醒和代理网络回归 |
 | 开源自部署 Server | `apps/server` 已实现单账号授权、设备凭据持久化与刷新、Control/Noise 握手转发和加密 Relay、Web 登录与设备状态页；提供 Dockerfile/Compose；单进程、Relay-only，不提供 Remote Web 会话界面或 WebRTC/TURN | Docker 实际构建与启动验证、真实 Desktop/Android/VS Code 跨机 E2E、反向代理长期连接回归 |
+| 开源自部署 Server（Cloudflare） | `apps/server-cf` 已实现 Worker + 单 SQLite-backed DO：REST 账号/设备凭据、refresh 轮换与撤销、Control/Noise 握手转发、opaque Relay、alarm 驱动心跳、Workers Assets 复用登录/设备页；本地 `wrangler dev` E2E 与 vitest workers 集成测试通过 | 真实 Cloudflare 账户部署、真机/跨网络长期连接回归；密码校验用 HMAC 替代 Node scrypt，不能直接迁移 Node `state.json` |
 | 完整 Server/Remote Web/Admin | 独立 Server 仓库已有实现，REST、Control WebSocket、Relay、Signaling 与 conformance fixture 跨仓库联调已完成 | 完整站点 runtime 变更在独立 Server 仓库完成，并同步跨仓库契约 |
 
 完整任务和优先级以 `docs/TODO.md` 为准。不得把 TODO 中的目标能力描述成已经完成。
@@ -116,6 +119,19 @@ pnpm --filter @dsh-remote/server build
 
 本地启动、环境变量与 Docker 部署见 `apps/server/README.md` 和 `apps/server/README.zh.md`。Server 设备凭据数据和 `.env` 不得提交。
 
+Cloudflare Workers 版的自部署验证命令：
+
+```bash
+pnpm --filter @dsh-remote/protocol build
+pnpm --filter @dsh-remote/server-cf assets
+pnpm --filter @dsh-remote/server-cf check
+pnpm --filter @dsh-remote/server-cf test
+pnpm --filter @dsh-remote/server-cf build
+pnpm --filter @dsh-remote/server-cf dev   # 默认 127.0.0.1:8787
+```
+
+部署、secret、本地 E2E 与运行时差异见 `apps/server-cf/README.md` / `README.zh.md` 和 `apps/server-cf/docs/`；`.dev.vars`、`.wrangler/` 不得提交。
+
 安装相关入口仅保留 `scripts/install.sh`（macOS/Linux）。不提供 Windows、独立卸载或 Token 包装脚本；
 构建/测试辅助脚本不在此清理范围内。按用户本轮明确授权，Linux 要求 root，缺少 DSH 时允许安装配套
 Node.js、DSH 和私有 pnpm，支持一次性 Host 注册 Token，并配置、启用和启动 systemd 系统服务，无需 linger。
@@ -145,6 +161,8 @@ Desktop 默认保留的 `desktop` profile，只能由其官方 launcher 管理�
 已知构建警告：Metro 对 `@noble/hashes/crypto.js` 使用 package exports fallback。该问题记录在 `docs/TODO.md`，不得静默删除说明。
 
 2026-09-20 开源自部署 Server 补充验证：check、11 个核心测试与生产 build 通过；构建产物本地启动后，健康检查、页面及静态资源、账号登录、Cookie 鉴权与未授权拒绝通过。Docker daemon 未运行，未验证镜像构建和容器启动；真实跨机与反向代理长期连接仍待验证。独立 Server 的既有联调结果不等于本版本已完成部署验收。
+
+2026-10-18 Cloudflare Workers 自部署 Server：`tsc --noEmit` 通过；`wrangler deploy --dry-run` 通过（176.68 KiB / gzip 32.38 KiB，读取 7 个静态资产，DO/Assets/vars 绑定正确）；`wrangler dev` 下 40 项 REST + Control + Noise Relay E2E 断言全部通过且无 workerd 未捕获异常；`vitest`（@cloudflare/vitest-pool-workers 0.23.0 + vitest 4.1.12）3 个集成用例通过；DO SQLite 在 `wrangler dev` 进程重启后保留账号会话、设备 token 与 refresh token。修复了不读取 body 的路由（logout）未排空请求体导致响应后抛异常的问题，并让 REST JSON 读取按 Node 版语义流式限制 16 KiB。未在真实 Cloudflare 账户部署，未做真机/跨网络长期连接验收。
 
 ## Implementation Rules
 
@@ -211,6 +229,8 @@ fixtures 全部保留，按操作及 Control frame 类型注册为 24 个契约�
 - `docs/PRIVACY.md`：隐私说明。
 - `docs/design/PRODUCT.md`、`docs/design/DESIGN.md`：产品定位与界面设计系统。
 - `apps/server/README.md`、`apps/server/README.zh.md`：开源自部署 Server 的实际能力、配置、运行方式和验证边界。
+- `apps/server-cf/README.md`、`apps/server-cf/README.zh.md`：Cloudflare Workers 自部署 Server 的部署步骤、配置、验证结果与已知差异。
+- `apps/server-cf/docs/cf-runtime.md`、`apps/server-cf/docs/cf-testing.md`：Cloudflare 运行时/配置约束与测试验证方式。
 - `docs/server.md`：完整 Server 项目的产品/功能设计，并说明本仓库自部署版本的范围。
 - `docs/plugin-integration.md`：Host Plugin 对接 Server 的账号认证、设备认证与凭证状态机，以及最小自部署版本支持的子集。
 - `docs/protocol.md`：跨仓库协议规范。

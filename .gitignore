@@ -23,3 +23,8 @@ artifacts/
 
 # Minimal self-hosted Server credentials and local state
 apps/server/data/
+
+# Cloudflare local dev state and agent scratch (never commit)
+apps/server-cf/.wrangler/
+.tmp/
+_scratch/

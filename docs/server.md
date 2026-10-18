@@ -2,7 +2,7 @@
 
 状态：Draft v0.1
 日期：2026-08-15
-实现状态：**完整站点位于独立 Server 仓库；本仓库 `apps/server` 提供最小自部署子集。**
+实现状态：**完整站点位于独立 Server 仓库；本仓库 `apps/server` 提供最小自部署子集，`apps/server-cf` 提供 Cloudflare Workers + Durable Objects 版最小自部署实现。**
 
 ## 0. 仓库边界（规范性）
 
@@ -448,6 +448,10 @@ caddy/nginx（可选）
 ```
 
 对外只有一个站点 URL；TURN 另开放其协议所需端口。备份 `/data/remote.db` 与 Server secret，绝不备份客户端/Host private key（它们不应存在于 Server）。
+
+### 21a. Cloudflare Workers 部署（最小自部署子集）
+
+`apps/server-cf` 提供另一种最小自部署方式：单个 Worker 承载 HTTPS/REST 与 WebSocket 入口，一个 SQLite-backed Durable Object 保存账号/设备凭据与连接配对状态，并通过 WebSocket Hibernation 和 alarm 心跳完成 Control/Noise 握手转发与 opaque Relay；Workers Assets 复用 `apps/server/web` 的登录/设备状态页。部署方式、secret、本地 E2E 与已知差异见 [apps/server-cf/README.zh.md](../apps/server-cf/README.zh.md)，运行时约束见 [apps/server-cf/docs/cf-runtime.md](../apps/server-cf/docs/cf-runtime.md)。该实现同样 Relay-only，不包含完整站点的多账号、Remote Web、Admin 与 TURN 能力。
 
 ## 22. 实现顺序
 

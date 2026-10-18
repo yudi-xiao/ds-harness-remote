@@ -1,0 +1,27 @@
+{
+  "name": "@dsh-remote/server-cf",
+  "version": "0.5.12",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "assets": "pnpm --dir ../server exec vite build --config web/vite.config.ts",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "types": "wrangler types",
+    "e2e": "node scripts/e2e-local.mjs",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@dsh-remote/protocol": "workspace:*",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "0.23.0",
+    "@cloudflare/workers-types": "^5.20261018.1",
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.151.1"
+  }
+}

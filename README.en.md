@@ -107,7 +107,7 @@ Download the latest APK from [GitHub Releases](https://github.com/liguobao/ds-ha
 
 By default, Remote uses this project's hosted Server at [https://dsh.r2049.cn](https://dsh.r2049.cn).
 
-For self-hosting, use the repository's [minimal Server](apps/server/README.md); its Web page shows device status only.
+For self-hosting, use the repository's [minimal Server](apps/server/README.md); its Web page shows device status only. A Cloudflare Workers + Durable Objects port is also available in [apps/server-cf](apps/server-cf/README.md).
 
 ## Screenshots
 

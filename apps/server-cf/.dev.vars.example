@@ -1,0 +1,6 @@
+# Copy to .dev.vars for local `wrangler dev`. Never commit .dev.vars.
+# Production: keep only DSH_SERVER_ACCOUNT / DSH_SERVER_PUBLIC_URL in wrangler.jsonc vars,
+# store the password with `wrangler secret put DSH_SERVER_PASSWORD`.
+DSH_SERVER_ACCOUNT=owner@example.com
+DSH_SERVER_PASSWORD=replace-with-a-long-random-password
+DSH_SERVER_PUBLIC_URL=http://localhost:8787

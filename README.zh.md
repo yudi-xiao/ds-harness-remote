@@ -109,7 +109,7 @@ dsh plugin --profile web add -w ds-harness-remote@0.5.12
 
 默认使用本项目提供的[https://dsh.r2049.cn](https://dsh.r2049.cn)托管 Remote Server。
 
-自建托管Server可使用仓库内的[最小 Server](apps/server/README.zh.md)，其 Web 页面仅提供设备状态。
+自建托管Server可使用仓库内的[最小 Server](apps/server/README.zh.md)，其 Web 页面仅提供设备状态。仓库同时提供 [Cloudflare Workers + Durable Objects 版](apps/server-cf/README.zh.md)。
 
 ## 界面截图
 

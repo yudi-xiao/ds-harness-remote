@@ -1,3 +1,8 @@
+## Unreleased
+
+- Adds a Cloudflare Workers + Durable Objects self-hosted Server (`apps/server-cf`): one Worker routes REST and WebSocket traffic into a single SQLite-backed Durable Object that mirrors the Node server's account/device credentials, Control + Noise handshake forwarding, opaque Relay and rate limits; Workers Assets reuse the existing login/device UI. Includes deployment docs, a local `wrangler dev` E2E script (40 assertions), Workers-pool integration tests and local verification. Not yet deployed to a real Cloudflare account; the password verifier uses HMAC-SHA256 because Workers WebCrypto has no scrypt, so a Node `data/state.json` cannot be imported.
+- 新增 Cloudflare Workers + Durable Objects 版开源自部署 Server（`apps/server-cf`）：单个 Worker 将 REST 与 WebSocket 请求路由到单个 SQLite-backed Durable Object，对齐 Node 版的账号/设备凭据、Control + Noise 握手转发、opaque Relay 与限流；Workers Assets 复用现有登录/设备页。包含部署文档、本地 `wrangler dev` E2E 脚本（40 项断言）、Workers pool 集成测试与本地验证。尚未部署到真实 Cloudflare 账户；Workers WebCrypto 没有 scrypt，密码校验改用 HMAC-SHA256，不能导入 Node 版 `data/state.json`。
+
 ## 0.5.12 - 2026-10-18
 
 - Unifies all first-party package/client versions at `0.5.12`; Android `versionCode` and Expo iOS `buildNumber` are both `50`.
