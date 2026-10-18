@@ -1,8 +1,9 @@
-import type { HistoryEntry, ApprovalOutcome, ChatItem, ChatMessage, MuxStreamFrame, NativeSessionEvent, ToolActivity, ToolDisplayDetail } from '../types'
+import type { HistoryEntry, ApprovalOutcome, ChatImage, ChatItem, ChatMessage, ImageMediaType, MuxStreamFrame, NativeSessionEvent, ToolActivity, ToolDisplayDetail } from '../types'
 
 type UnknownRecord = Record<string, unknown>
 
 const MAX_TOOL_DETAIL_CHARS = 64_000
+const MAX_MESSAGE_IMAGES = 8
 const IMAGE_MEDIA_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
 const DATA_IMAGE_URL = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/]+={0,2})$/u
 
@@ -337,6 +338,7 @@ function applyToolCall(
     ? toolCallDetail(view, argumentsText)
     : toolResultDetail(view, data)
   const failed = state === 'finished' && toolResultFailed(data)
+  const resultImages = state === 'finished' ? messageImages(data) : []
   const uiMeta = state === 'finished' && !failed && ['ui_render', 'ui_patch', 'ui_render_widget'].includes(stringValue(data.name) ?? stringValue(data.toolName) ?? (current.find(item => item.id === id && item.kind === 'tool') as ToolActivity | undefined)?.toolKey ?? '')
     ? data.meta : undefined
   const next: ToolActivity = {
@@ -347,6 +349,7 @@ function applyToolCall(
     ...(stringValue(data.name) ?? stringValue(data.toolName) ? { toolKey: stringValue(data.name) ?? stringValue(data.toolName) } : {}),
     ...(argumentsText.length > 0 ? { arguments: argumentsText } : {}),
     ...(summary === undefined ? {} : { summary }),
+    ...(resultImages.length === 0 ? {} : { images: resultImages }),
     ...(uiMeta === undefined ? {} : { uiResultMeta: uiMeta }),
     ...(state === 'running' && detail !== undefined ? { callDetail: detail } : {}),
     ...(state === 'finished' && detail !== undefined ? { resultDetail: detail } : {}),
@@ -363,6 +366,7 @@ function applyToolCall(
         ...(summary === undefined ? {} : { summary }),
         ...(next.callDetail === undefined ? {} : { callDetail: next.callDetail }),
         ...(next.resultDetail === undefined ? {} : { resultDetail: next.resultDetail }),
+        ...(resultImages.length === 0 ? {} : { images: resultImages }),
         // A new terminal result must not inherit an earlier success marker.
         ...(state === 'finished' ? { uiResultMeta: next.uiResultMeta } : {}),
         state: next.state,
@@ -643,18 +647,54 @@ function messageReasoning(data: UnknownRecord): string {
 function messageImages(data: UnknownRecord): NonNullable<ChatMessage['images']> {
   const message = isRecord(data.message) ? data.message : data
   const content = Array.isArray(message.content) ? message.content : []
-  return content.flatMap(block => {
-    if (!isRecord(block) || block.type !== 'image') return []
-    const attachment = isRecord(block.attachment) ? block.attachment : {}
-    const attachmentId = stringValue(block.attachmentId) ?? stringValue(attachment.attachmentId)
-    const uri = imageDataUri(block)
-    if (uri === undefined && attachmentId === undefined) return []
-    const name = stringValue(block.name) ?? stringValue(attachment.name)
-    return [{
-      ...(uri === undefined ? {} : { uri }),
-      ...(name === undefined ? {} : { name }),
-    }]
-  })
+  return chatImages(content)
+}
+
+/**
+ * Project native image blocks. DSH stores prompt images as inline base64 only
+ * in the prompt upload; the durable log and tool results carry an attachment
+ * reference instead. Keep both forms: inline bytes render immediately, while a
+ * reference is hydrated later through `session/attachment` (display-only).
+ */
+function chatImages(blocks: readonly unknown[], depth = 0): ChatImage[] {
+  if (depth > 2) return []
+  const images: ChatImage[] = []
+  for (const block of blocks) {
+    if (!isRecord(block)) continue
+    if (block.type === 'image') {
+      const image = chatImage(block)
+      if (image !== undefined) images.push(image)
+    } else if (block.type === 'tool-result' && Array.isArray(block.content)) {
+      images.push(...chatImages(block.content, depth + 1))
+    }
+    if (images.length >= MAX_MESSAGE_IMAGES) break
+  }
+  return images
+}
+
+function chatImage(block: UnknownRecord): ChatImage | undefined {
+  const attachment = isRecord(block.attachment) ? block.attachment : {}
+  const attachmentId = stringValue(block.attachmentId) ?? stringValue(attachment.attachmentId)
+  const uri = imageDataUri(block)
+  if (uri === undefined && attachmentId === undefined) return undefined
+  const mediaTypeValue = stringValue(block.mediaType) ?? stringValue(attachment.mediaType)
+  const mediaType = mediaTypeValue !== undefined && IMAGE_MEDIA_TYPES.has(mediaTypeValue)
+    ? mediaTypeValue as ImageMediaType
+    : undefined
+  const width = positiveInteger(block.width) ?? positiveInteger(attachment.width)
+  const height = positiveInteger(block.height) ?? positiveInteger(attachment.height)
+  const name = stringValue(block.name) ?? stringValue(attachment.name)
+  return {
+    ...(uri === undefined ? {} : { uri }),
+    ...(name === undefined ? {} : { name }),
+    ...(attachmentId === undefined ? {} : { attachmentId }),
+    ...(mediaType === undefined ? {} : { mediaType }),
+    ...(width === undefined || height === undefined ? {} : { width, height }),
+  }
+}
+
+function positiveInteger(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : undefined
 }
 
 function imageDataUri(block: UnknownRecord): string | undefined {

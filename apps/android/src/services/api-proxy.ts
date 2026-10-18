@@ -23,9 +23,11 @@ import type {
   RemoteSession,
   SessionHistoryPage,
   SessionModels,
+  SessionAttachmentValue,
   WorkspaceList,
   WorkspaceView,
 } from '../types'
+import { isSessionAttachmentValue } from './session-attachment'
 
 const DIRECT_API_CALL_BYTES = 2 * 1024 * 1024
 const LEGACY_AGENT_PRESET = 'code'
@@ -314,6 +316,15 @@ export class RemoteApiProxy {
       maxMessages,
     })
     return { events: Array.isArray(result.events) ? result.events : [], hasMore: result.hasMore === true }
+  }
+
+  /** Official read-only image lookup for the rc.2 ApiProxy data plane. */
+  async sessionAttachment(sessionId: string, attachmentId: string): Promise<SessionAttachmentValue> {
+    const result = await this.call<unknown>('session.attachment', { sessionId, attachmentId })
+    if (!isSessionAttachmentValue(result)) {
+      throw new ApiProxyError('INVALID_MESSAGE', 'The Host returned an invalid image attachment.')
+    }
+    return result
   }
 
   async sessionPrompt(sessionId: string, text: string, rpcId = createNativeRpcId(), images: PromptImage[] = []): Promise<void> {

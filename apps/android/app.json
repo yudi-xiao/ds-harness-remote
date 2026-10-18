@@ -1,28 +1,36 @@
 {
   "expo": {
-    "name": "DSH Remote",
-    "slug": "dsh-remote",
+    "name": "Agent",
+    "slug": "dsh-agent",
     "scheme": "dshremote",
-    "version": "0.5.12",
+    "version": "0.6.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "io.github.liguobao.dshremote",
-      "buildNumber": "50"
+      "bundleIdentifier": "com.howlearnwood.agent",
+      "buildNumber": "51"
     },
     "android": {
-      "package": "io.github.liguobao.dshremote",
-      "versionCode": 50,
+      "package": "com.howlearnwood.agent",
+      "versionCode": 51,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
+        "android.permission.REQUEST_INSTALL_PACKAGES",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET",
         "android.permission.REQUEST_INSTALL_PACKAGES",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.INTERNET"
       ],
       "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.SYSTEM_ALERT_WINDOW"
       ],
       "adaptiveIcon": {
@@ -32,7 +40,7 @@
       "predictiveBackGestureEnabled": false
     },
     "plugins": [
-      "./plugins/with-remote-foreground-service",
+      "./plugins/with-remote-foreground-service.cjs",
       "expo-file-system",
       [
         "expo-splash-screen",
@@ -69,6 +77,15 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "61c55e4e-03c6-4faa-b7b7-dd9ac3f92175"
+      }
+    },
+    "owner": "shuohigh",
+    "updates": {
+      "url": "https://u.expo.dev/61c55e4e-03c6-4faa-b7b7-dd9ac3f92175"
+    }
   }
 }

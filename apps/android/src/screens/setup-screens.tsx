@@ -18,8 +18,8 @@ import { useThemedStyles } from '../ui/use-themed-styles'
 import { strings as zhCN, type LanguagePreference } from '../locales/i18n'
 import type { ThemePreference } from '../ui/theme'
 
-/** Default DSH Remote Server; a build can override it via EXPO_PUBLIC_DSH_REMOTE_SERVER. */
-const defaultServerUrl = 'https://dsh.r2049.cn'
+/** Personal DSH Remote Server; a build can override it via EXPO_PUBLIC_DSH_REMOTE_SERVER. */
+const defaultServerUrl = 'https://remote-dsh.howlearnwood.com'
 const updateUrl = 'https://github.com/liguobao/ds-harness-remote/releases/latest'
 const releaseApiUrl = 'https://api.github.com/repos/liguobao/ds-harness-remote/releases/latest'
 const developerUrl = 'https://www.zhihu.com/people/codelover'
@@ -41,7 +41,7 @@ export function ServerSetupScreen({ onComplete, onBack }: { onComplete: () => vo
   const startOAuth = useAppStore(state => state.startOAuth)
   const startGithubOAuth = useAppStore(state => state.startGithubOAuth)
   const [serverUrl, setServerUrl] = useState(config?.baseUrl ?? process.env.EXPO_PUBLIC_DSH_REMOTE_SERVER ?? defaultServerUrl)
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(process.env.EXPO_PUBLIC_DSH_REMOTE_ACCOUNT ?? '')
   const [password, setPassword] = useState('')
   const [loginMethod, setLoginMethod] = useState<SetupLoginMethod>('oauth')
   const { colors } = useTheme()

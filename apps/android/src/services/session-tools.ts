@@ -1,6 +1,7 @@
 import { AgentAcpClient, RemoteTypertGateway, type RemoteGatewayStream } from '@dsh-remote/client-core'
 import type { AcpWorkspaceToolCallEndpoint, AcpWorkspaceToolStreamEndpoint, AgentAcpFrameData } from '@dsh-remote/protocol'
-import type { PermissionSelect } from '../types'
+import type { PermissionSelect, SessionAttachmentValue } from '../types'
+import { CHAT_ATTACHMENT_MAX_RESPONSE_BYTES } from './session-attachment'
 
 export interface WorkspaceDirectory {
   path: string
@@ -78,6 +79,8 @@ export interface SessionTools {
   readBytes(sessionId: string, path: string, offset: number, length: number, signal?: AbortSignal): Promise<WorkspaceFileBytes>
   officeGeneration(signal?: AbortSignal): Promise<string>
   renderOfficePdf(sessionId: string, path: string, signal?: AbortSignal): Promise<WorkspaceOfficeRender>
+  /** Read one image already referenced by this Session through the official lookup. */
+  readAttachment(sessionId: string, attachmentId: string, signal?: AbortSignal): Promise<SessionAttachmentValue>
   terminalEnvironment(sessionId: string): Promise<{ maxInputBytes: number; maxCols: number; maxRows: number }>
   listTerminals(sessionId: string): Promise<TerminalInfo[]>
   createTerminal(sessionId: string, id: string, cols: number, rows: number): Promise<TerminalInfo>
@@ -166,6 +169,20 @@ export class HarnessSessionTools implements SessionTools {
     )
   }
 
+  /**
+   * Official read-only image lookup. The Host authorizes the id against this
+   * exact Session log and returns canonical base64; the response is bounded by
+   * the bounded Remote transfer when it exceeds the inline RPC size.
+   */
+  readAttachment(sessionId: string, attachmentId: string, signal?: AbortSignal): Promise<SessionAttachmentValue> {
+    return this.gateway.call(
+      'session/attachment',
+      { args: { request: { sessionId, attachmentId } } },
+      signal,
+      { maxResponseBytes: CHAT_ATTACHMENT_MAX_RESPONSE_BYTES },
+    )
+  }
+
   terminalEnvironment(sessionId: string): Promise<{ maxInputBytes: number; maxCols: number; maxRows: number }> {
     return this.gateway.call('terminal/environment', { args: { agentId: sessionId } })
   }
@@ -228,6 +245,7 @@ export class AcpSessionTools implements SessionTools {
   }
   officeGeneration(): Promise<string> { return Promise.reject(Object.assign(new Error('Office preview is unavailable for ACP workspaces.'), { code: 'FEATURE_NOT_SUPPORTED' })) }
   renderOfficePdf(): Promise<WorkspaceOfficeRender> { return Promise.reject(Object.assign(new Error('Office preview is unavailable for ACP workspaces.'), { code: 'FEATURE_NOT_SUPPORTED' })) }
+  readAttachment(): Promise<SessionAttachmentValue> { return Promise.reject(Object.assign(new Error('Session attachments are unavailable for ACP workspaces.'), { code: 'FEATURE_NOT_SUPPORTED' })) }
   terminalEnvironment(sessionId: string): Promise<{ maxInputBytes: number; maxCols: number; maxRows: number }> { return this.call(sessionId, 'terminal/environment', {}) }
   listTerminals(sessionId: string): Promise<TerminalInfo[]> { return this.call(sessionId, 'terminal/list', {}) }
   createTerminal(sessionId: string, id: string, cols: number, rows: number): Promise<TerminalInfo> { return this.call(sessionId, 'terminal/create', { request: { id, cols, rows } }) }

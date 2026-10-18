@@ -21,6 +21,7 @@ import {
   Alert,
   Animated,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -107,6 +108,10 @@ const ChatActivityGroup = memo(function ChatActivityGroup({ items, closed, busyA
   const body = useRef<ScrollView>(null)
   const pending = items.some(item => (item.kind === 'approval' || item.kind === 'question') && item.outcome === undefined)
   const expanded = pending || open
+  // Generated/tool images are the visible result of the turn; keep them on the
+  // conversation canvas even while the activity details stay collapsed.
+  const collapsedImages = expanded ? [] : items.filter((item): item is ToolActivity =>
+    item.kind === 'tool' && (item.images?.length ?? 0) > 0)
   const tools = items.filter((item): item is ToolActivity => item.kind === 'tool')
   const activeTool = closed ? undefined : tools.findLast(item => item.state === 'running')
   const runningReasoning = closed ? undefined : items.findLast(item => item.kind === 'message' && item.streamingPhase === 'reasoning')
@@ -128,6 +133,7 @@ const ChatActivityGroup = memo(function ChatActivityGroup({ items, closed, busyA
       {expanded ? <ChevronUp size={17} color={colors.muted} /> : <ChevronDown size={17} color={colors.muted} />}
       <Text style={styles.processLabel} numberOfLines={1}>{label}{detail === undefined ? '' : ` · ${detail}`}</Text>
     </Pressable>
+    {collapsedImages.map(item => <ChatImages key={`${item.id}:collapsed-images`} images={item.images!} tool />)}
     {expanded && <ScrollView ref={body} style={{ maxHeight: Math.min(400, height / 2) }} nestedScrollEnabled
       keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
       onLayout={() => { if (running) body.current?.scrollToEnd({ animated: false }) }}
@@ -334,18 +340,62 @@ function ToolRow({ item, compact }: { item: ToolActivity; compact: boolean }) {
 export function ChatImages({ images, alignEnd = false, tool = false }: { images: ChatImage[]; alignEnd?: boolean; tool?: boolean }) {
   const { colors } = useTheme()
   const styles = useThemedStyles(createStyles)
+  const [preview, setPreview] = useState<string | undefined>(undefined)
   return (
     <View style={[styles.messageImages, alignEnd && styles.messageImagesUser, tool && styles.toolImages]}>
       {images.map((image, index) => image.uri !== undefined
-        ? <Image key={`${image.uri}:${index}`} source={{ uri: image.uri }} style={styles.messageImage} resizeMode="cover" />
+        ? (
+          <Pressable
+            key={`${image.uri}:${index}`}
+            accessibilityRole="imagebutton"
+            accessibilityLabel={image.name ?? zhCN.chat.unnamedImage}
+            onPress={() => setPreview(image.uri)}
+          >
+            <Image
+              source={{ uri: image.uri }}
+              style={[styles.messageImage, chatImageSize(image, tool)]}
+              resizeMode="cover"
+            />
+          </Pressable>
+        )
         : (
           <View key={`${image.name ?? 'image'}:${index}`} style={styles.messageImagePlaceholder}>
             <Images size={20} color={colors.primary} />
             <Text style={styles.messageImageName} numberOfLines={1}>{image.name ?? zhCN.chat.unnamedImage}</Text>
           </View>
         ))}
+      <Modal
+        visible={preview !== undefined}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setPreview(undefined)}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={zhCN.common.close}
+          style={styles.imagePreviewBackdrop}
+          onPress={() => setPreview(undefined)}
+        >
+          {preview !== undefined && (
+            <Image source={{ uri: preview }} style={styles.imagePreviewFull} resizeMode="contain" />
+          )}
+        </Pressable>
+      </Modal>
     </View>
   )
+}
+
+/** Preserve the Host-reported aspect ratio instead of cropping generated art. */
+function chatImageSize(image: ChatImage, tool: boolean): { width: number; height: number } | undefined {
+  if (image.width === undefined || image.height === undefined || image.width <= 0 || image.height <= 0) return undefined
+  const maxWidth = tool ? 200 : 180
+  const maxHeight = tool ? 300 : 240
+  const scale = Math.min(maxWidth / image.width, maxHeight / image.height, 1)
+  return {
+    width: Math.max(48, Math.round(image.width * scale)),
+    height: Math.max(48, Math.round(image.height * scale)),
+  }
 }
 
 function ToolDetailView({ label, detail }: { label: string; detail: ToolDisplayDetail }) {

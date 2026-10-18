@@ -279,6 +279,10 @@ export function createSessionActions({ get, set, runtime }: SessionAccess): Pick
           }
         })
         void runtime.refreshSessionModels(session.sessionId)
+        // Durable tool-result / prompt images reference the Host attachment
+        // store; hydrate the loaded window through the official lookup.
+        runtime.retryChatImages()
+        void runtime.hydrateSessionImages(session.sessionId)
       }
       try {
         await load()
@@ -759,6 +763,7 @@ export function createSessionActions({ get, set, runtime }: SessionAccess): Pick
             historyLoadingOlder: false,
           } : {}),
         }))
+        void runtime.hydrateSessionImages(session.sessionId)
       } catch (error) {
         set(state => state.selectedSession?.sessionId === session.sessionId
           ? { historyLoadingOlder: false, error: friendlyError(error) } : {})

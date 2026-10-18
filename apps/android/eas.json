@@ -1,0 +1,35 @@
+{
+  "cli": {
+    "version": ">= 25.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "credentialsSource": "local",
+      "channel": "preview",
+      "node": "22.14.0",
+      "pnpm": "9.15.4",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DSH_REMOTE_SERVER": "https://remote-dsh.howlearnwood.com",
+        "EXPO_PUBLIC_DSH_REMOTE_ACCOUNT": "shuohigh"
+      }
+    },
+    "production": {
+      "credentialsSource": "local",
+      "channel": "production",
+      "node": "22.14.0",
+      "pnpm": "9.15.4",
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_DSH_REMOTE_SERVER": "https://remote-dsh.howlearnwood.com",
+        "EXPO_PUBLIC_DSH_REMOTE_ACCOUNT": "shuohigh"
+      }
+    }
+  }
+}

@@ -64,7 +64,7 @@ Plugin bundle 构建统一 esbuild 的依赖模块路径标签，避免 pnpm iso
 | --- | --- | --- |
 | Plugin Host | 账号密码/主机匹配码接入、dsh-TUI 无 browser connection 时默认开启 Host、GitHub/知乎二维码授权与可点击 URL、原生 `/remote` login/status/logout 与 Tab 补全、同账号 peer 校验、隔离身份/凭证、Relay/Noise IK、并发 Client 与按连接隔离的 rc.2 ApiProxy / v0.1.2 alpha.1–rc.1 Typert Remote allowlist bridge 已实现；v0.1.5 rc.1 Session V3 与 v0.1.6 alpha.1 支持已接入，并已在独立 `dsh-v0.1.6-alpha.1` 实例上验证 Web → Host 主链路；真实 Desktop/dsh-TUI 跨机 E2E 已验证；无自定义 Harness 业务适配层 | v0.1.5/v0.1.6 跨机 E2E、legacy owner 恢复体验、allowlist 覆盖审计、跨平台 picker 边界 |
 | Plugin Remote Client | 与 Host runtime 同时启动，无需 Client 模式；Remote 模态框支持 GitHub/知乎扫码与账号密码登录、本机过滤、主机/版本信息、已有 Harness/CodeX Workspace、远端目录浏览与 CodeX Project 注册、ApiProxy/Typert 图片 Prompt/回显，以及配合 dsh-file-viewer 的受限只读文件预览，随后复用原生 Harness UI；加密通道 capability 探测保留 legacy Host 降级并拒绝 ApiProxy/Typert 混连；Web → Host 主链路已在 v0.1.5 rc.1 与 v0.1.6 alpha.1 上验证 | CodeX Project 新建跨设备 E2E、断线重连恢复、页面级导航接口、长期稳定性 |
-| Android | 已迁移到 rc.2 ApiProxy / v0.1.2 Typert Remote 双数据面，并直接接入可选 `codex.app.*`：账号登录注册、成员设备列表与 identity key 固定、Adaptive transport + Noise、capability 探测、Harness/CodeX Workspace 与 Session、远端目录选择与 CodeX Project 注册、工作区收藏与首页快捷链接（点击直达该工作区最近会话）、分页 History/live frame、模型/权限、文字/图片 Prompt、interrupt 与审批，以及跟随系统/英文/简体中文界面；启动固定进入设备列表，`resolveAutoConnectDevice` 自动连接逻辑保留但不触发；rc.2/v0.1.2/CodeX 真机跨机 E2E、图片分块、重连和 WebRTC 已验证 | CodeX Project 新建跨设备 E2E、协议 conformance fixtures、长期稳定性与跨设备回归 |
+| Android | 已迁移到 rc.2 ApiProxy / v0.1.2 Typert Remote 双数据面，并直接接入可选 `codex.app.*`：账号登录注册、成员设备列表与 identity key 固定、Adaptive transport + Noise、capability 探测、Harness/CodeX Workspace 与 Session、远端目录选择与 CodeX Project 注册、工作区收藏与首页快捷链接（点击直达该工作区最近会话）、分页 History/live frame、模型/权限、文字/图片 Prompt、工具结果图片回显（按会话引用经官方 `session/attachment` 只读读取，自适应内联与全屏查看）、interrupt 与审批，以及跟随系统/英文/简体中文界面；启动固定进入设备列表，`resolveAutoConnectDevice` 自动连接逻辑保留但不触发；rc.2/v0.1.2/CodeX 真机跨机 E2E、图片分块、重连和 WebRTC 已验证 | CodeX Project 新建跨设备 E2E、图片回显 APK/真机验收、协议 conformance fixtures、长期稳定性与跨设备回归 |
 | VS Code | Extension 基础已实现：SecretStorage 身份/凭证、账号/扫码登录、Host 指纹固定、Adaptive transport + Noise、rc.2 ApiProxy / v0.1.2 Typert Remote Host→Workspace→Session 导航、Prompt、permission command 与编辑区会话面板 | Extension Host 跨机 E2E、实时流式更新、question 界面与重连恢复 |
 | Browser | Chrome/Edge MV3 轻量入口已实现：临时读取已登录 Web 的授权并换取隔离的 device credential，popup 展示在线 Host，点击后直接打开同源 Remote Web；不承载账号登录、Remote transport、ApiProxy 或会话 UI；unpacked 联调与 Web 授权跳转、独立 Server 合约联调已验证 | 随独立 Server 合约变化同步 |
 | Protocol | Control/Relay 与 ApiProxy tunnel 基础已实现 | 完整 Zod schema、limits、golden vectors |
@@ -516,3 +516,60 @@ IME inset 在窗口尺寸变化后重新读取 `Keyboard.metrics()`，避免沿�
 面板在竖屏与横屏往返切换后均可用；横屏 Gboard 走系统全屏输入编辑界面，未验证普通内联 IME
 布局。未验证平板、折叠屏/分屏、大字体、TalkBack、Terminal/PDF 原生交互及 iOS 旋转布局
 （该改动同时解除 iOS 方向锁定，需另行验收）。
+
+## Android chat image attachments (2026-10-18)
+
+按用户要求，Android Chat 现在直接显示工具产生的图片：原生 `tool/result` 与历史图片块保留官方
+`attachment` 引用（`ChatImage.attachmentId/mediaType/width/height`）；打开会话、加载更早历史或
+收到新的 `tool/result` / `user/message` live frame 时，经官方 `session.attachment`（Typert
+`{ args: { request: { sessionId, attachmentId } } }` 与 rc.2 `session.attachment` 两条数据面）
+按会话授权读取并转换为 data URI。只接受与引用 id、mediaType 一致，canonical base64、声明字节数
+匹配且不超过 12 MiB 的图片；缓存按 attachment id 有界，失败保留占位且同一连接不反复请求。
+图片按 Host 报告的比例自适应缩略（不再裁切），点击可全屏查看；折叠的工具过程组也直接显示本轮
+结果图片。CodeX/ACP 投影继续使用各自内联图片，不新增文件访问、上传或通用 RPC。
+
+验证：Android `check`（renderer 生成 + workspace 数据面校验 + `tsc --noEmit`）与全量
+24 文件 / 136 测试通过；新增工具结果图片引用投影、`session/attachment` 响应校验以及两套数据面
+请求形状的核心测试。未验证原生 APK、真机渲染、加密跨设备与旧 Host 降级（旧 Host 无该端点时
+保留占位符）；新 APK 由 CI 的 `android-apk` 工作流构建。
+
+## Personal agent app ecosystem (2026-10-19)
+
+按用户要求，本分支改为个人自用生态，并使用用户个人 Expo 账号通过 EAS 构建 Android App：
+
+- `apps/android/app.json`：显示名 `Agent`，包名 `com.howlearnwood.agent`，`version 0.6.0`、
+  `versionCode 51`、`runtimeVersion.policy = appVersion`；scheme 保持 `dshremote` 以兼容既有登录流程。
+- `apps/android/eas.json`：`preview`（内部发行 APK，`channel: preview`）与 `production`（AAB）
+  均使用 `credentialsSource: "local"`，固定 Node `22.14.0` / pnpm `9.15.4`，并注入
+  `EXPO_PUBLIC_DSH_REMOTE_SERVER` / `EXPO_PUBLIC_DSH_REMOTE_ACCOUNT` 个人默认值。
+- 新增 `expo-updates` 依赖；JS-only 修复后续通过 `eas update` 免重装下发。
+- `apps/android/scripts/eas-post-install.mjs` 与 `eas-build-post-install` 钩子：EAS 上传工作目录后
+  重新构建 `packages/**` 并生成 xterm/PDF 渲染器（Intelligent UI 仍为可选），否则 Metro 无法解析
+  未提交的 `dist`/`src/generated`。
+- 登录页默认 Server 与账号改为个人配置（`EXPO_PUBLIC_*` 可覆盖）。
+- 本地签名：`apps/android/keystores/release.keystore` + `apps/android/credentials.json`（均
+  gitignore）；本机离线备份位于 `~/.dsh/personal/agent-signing/`，不得提交或写入日志。
+  `credentials.json` 必须是无 BOM 的 JSON，否则 EAS CLI 报 “must exist … valid JSON”。
+- EAS 项目已创建并写入 `app.json`：`@shuohigh/dsh-agent`，projectId
+  `61c55e4e-03c6-4faa-b7b7-dd9ac3f92175`，`updates.url = https://u.expo.dev/61c55e4e-…`，
+  `preview` channel/branch 已创建；首次 `preview` APK 构建成功（build
+  `9066fff6-8f27-462a-af70-1b0688bb3b7e`）。
+- 自定义 config plugin 改为 `.cjs`（`plugins/with-remote-foreground-service.cjs`）：`apps/android`
+  是 `"type": "module"`，`.js` CJS 插件无法被 Expo/EAS 配置解析；插件现在从 `android.package`
+  动态读取包名，并替换 Kotlin 模板中的 `__DSH_REMOTE_PACKAGE__`，换包名无需改插件源码。
+- 首个 EAS Update 已发布到 `preview` 分支（group `cf4a86d0-6519-4228-b3fd-73cb8fe6e5ea`，
+  runtime `0.6.0`）；本地 `apps/android/.env`（gitignore）保存个人 `EXPO_PUBLIC_*` 预填值，
+  使 OTA bundle 与 APK 的登录默认值一致。
+- 完整操作流程见 `docs/personal-agent-app.zh.md`。
+
+验证：Android `check`（renderer 生成 + workspace 数据面校验 + `tsc --noEmit`）、全量
+24 文件 / 136 测试、`expo config --type prebuild` 与 Android Hermes bundle 导出通过；
+bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已成功产出 preview APK
+（build `9066fff6-8f27-462a-af70-1b0688bb3b7e`，136,257,561 bytes，SHA-256
+`438E08B5…9A698406A25F177`，直链
+<https://expo.dev/artifacts/eas/5BgA6HMtWEBSpxQDluIlsONLCOXZBrBN6a2rF7IBDRQ.apk>，
+含 v2/v3 签名块与 arm64-v8a/armeabi-v7a 原生库，解包后 `assets/index.android.bundle`
+含 `session/attachment`、个人 Server URL/账号与 `attachmentId`）；首个 EAS Update 已发布
+（`preview`，group `cf4a86d0-6519-4228-b3fd-73cb8fe6e5ea`，runtime `0.6.0`），公网
+`u.expo.dev` manifest 对该 runtime/channel 返回已发布更新。真机安装与会话图片回显的
+真机验收仍待确认。

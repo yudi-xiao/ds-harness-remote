@@ -45,3 +45,8 @@ yarn-error.*
 
 # Locally bundled terminal and PDF renderers
 src/generated/
+
+# Personal EAS local signing credentials (never commit; back them up separately)
+credentials.json
+keystores/
+*.keystore

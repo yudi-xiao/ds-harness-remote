@@ -59,6 +59,8 @@ export function createStyles(colors: ThemeColors) {
     messageImage: { width: 132, height: 104, borderRadius: radius.md, backgroundColor: colors.surfaceStrong },
     messageImagePlaceholder: { width: 132, minHeight: 76, borderRadius: radius.md, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', padding: spacing.sm, gap: spacing.xs },
     messageImageName: { ...type.caption, color: colors.primary, maxWidth: '100%' },
+    imagePreviewBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center', padding: spacing.md },
+    imagePreviewFull: { width: '100%', height: '100%' },
     reasoningCard: { alignSelf: 'stretch', borderRadius: radius.md, overflow: 'hidden' },
     reasoningHeader: { minHeight: 48, paddingHorizontal: spacing.xs, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
     reasoningHeaderPressed: { backgroundColor: colors.surfaceStrong },

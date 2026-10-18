@@ -342,7 +342,7 @@ describe('remote mux frame reducer', () => {
               id: 'u-image',
               role: 'user',
               text: '',
-              images: [{ name: 'diagram.png' }],
+              images: [{ attachmentId: 'attachment-1', name: 'diagram.png' }],
             }),
           ])
         },
@@ -530,5 +530,75 @@ describe('remote mux frame reducer', () => {
       },
     ])
   }, 15000)
+  it('projects durable image references from tool results and prompt history', () => {
+    const events = [
+      sessionEvent({
+        type: 'user/message',
+        seq: 1,
+        time: 1000,
+        data: {
+          message: {
+            id: 'user-image',
+            role: 'user',
+            content: [{ type: 'image', attachment: { attachmentId: 'sha256:aaa', mediaType: 'image/jpeg', width: 576, height: 1024 } }],
+            source: { kind: 'user', rpcId: 'rpc-image' },
+          },
+        },
+      }),
+      sessionEvent({ type: 'tool/call', seq: 2, time: 1100, data: { turn: 1, name: 'generate_image_krea2', callId: 'call-image' } }),
+      sessionEvent({
+        type: 'tool/result',
+        seq: 3,
+        time: 1200,
+        data: {
+          turn: 1,
+          message: {
+            id: 'tool-image',
+            role: 'tool',
+            toolCallId: 'call-image',
+            source: { kind: 'tool', callId: 'call-image' },
+            content: [
+              { type: 'text', text: '{"ok":true}' },
+              { type: 'image', attachment: { attachmentId: 'sha256:bbb', mediaType: 'image/png', width: 900, height: 1600 } },
+            ],
+          },
+        },
+      }),
+      sessionEvent({ type: 'tool/call', seq: 4, time: 1300, data: { turn: 1, name: 'inline_image', callId: 'call-inline' } }),
+      sessionEvent({
+        type: 'tool/result',
+        seq: 5,
+        time: 1400,
+        data: {
+          turn: 1,
+          message: {
+            id: 'tool-inline',
+            role: 'tool',
+            toolCallId: 'call-inline',
+            source: { kind: 'tool', callId: 'call-inline' },
+            content: [{ type: 'image', mediaType: 'image/jpeg', data: 'iVBORw0KGgo=' }],
+          },
+        },
+      }),
+    ]
+    const items = foldHistory(events.map(event => ({ event })), 's1')
+    expect(items[0]).toMatchObject({
+      kind: 'message',
+      role: 'user',
+      images: [{ attachmentId: 'sha256:aaa', mediaType: 'image/jpeg', width: 576, height: 1024 }],
+    })
+    expect(items[1]).toMatchObject({
+      kind: 'tool',
+      toolKey: 'generate_image_krea2',
+      state: 'finished',
+      images: [{ attachmentId: 'sha256:bbb', mediaType: 'image/png', width: 900, height: 1600 }],
+    })
+    expect(items[2]).toMatchObject({
+      kind: 'tool',
+      toolKey: 'inline_image',
+      state: 'finished',
+      images: [{ uri: 'data:image/jpeg;base64,iVBORw0KGgo=' }],
+    })
+  })
 
 })

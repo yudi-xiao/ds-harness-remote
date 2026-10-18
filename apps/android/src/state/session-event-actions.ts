@@ -136,6 +136,13 @@ export function createSessionEventActions({ get, set, runtime }: SessionAccess):
           ...(releasePrompt ? { busyAction: undefined } : {}),
         }
       })
+      const payload = frame.payload
+      if (payload.type === 'session/event' && payload.sessionId !== undefined
+        && (payload.event?.type === 'tool/result' || payload.event?.type === 'user/message')) {
+        // Tool results and persisted prompts carry durable image references;
+        // resolve their bytes through the official attachment lookup.
+        runtime.hydrateSessionImages(payload.sessionId)
+      }
     },
 
     handleCodexFrame(frame) {

@@ -1,6 +1,6 @@
 {
   "name": "@dsh-remote/android",
-  "version": "0.5.12",
+  "version": "0.6.0",
   "type": "module",
   "main": "index.ts",
   "dependencies": {
@@ -15,8 +15,8 @@
     "expo-application": "~57.0.2",
     "expo-blur": "~57.0.3",
     "expo-build-properties": "~57.0.11",
-    "expo-crypto": "~57.0.1",
     "expo-clipboard": "~57.0.1",
+    "expo-crypto": "~57.0.1",
     "expo-device": "~57.0.1",
     "expo-file-system": "~57.0.5",
     "expo-haptics": "~57.0.1",
@@ -27,6 +27,7 @@
     "expo-splash-screen": "~57.0.6",
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.2",
+    "expo-updates": "~57.0.26",
     "lucide-react-native": "^1.31.0",
     "markdown-it": "^14.3.3",
     "pdfjs-dist": "6.3.289",
@@ -47,6 +48,7 @@
   },
   "scripts": {
     "prepare:workspace": "pnpm --filter '@dsh-remote/android^...' -r build && pnpm run verify:workspace && pnpm run build:renderers",
+    "eas-build-post-install": "node scripts/eas-post-install.mjs",
     "build:renderers": "node scripts/build-terminal.mjs && node scripts/build-pdf.mjs && node scripts/build-intelligent-ui.mjs",
     "verify:workspace": "node scripts/verify-workspace-data-planes.mjs",
     "prestart": "pnpm run prepare:workspace",

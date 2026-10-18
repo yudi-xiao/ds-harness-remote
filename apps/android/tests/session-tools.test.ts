@@ -4,6 +4,7 @@ import { RemoteTypertGateway, type RemoteClientCore } from '@dsh-remote/client-c
 import { sessionPermissions } from '../src/services/session-permissions'
 import type { RemoteSession } from '../src/types'
 import { HarnessSessionTools, OFFICE_PREVIEW_MAX_RESPONSE_BYTES, OFFICE_PREVIEW_TIMEOUT_MS } from '../src/services/session-tools'
+import { CHAT_ATTACHMENT_MAX_RESPONSE_BYTES } from '../src/services/session-attachment'
 
 function setup(value: unknown) {
   const rpc = vi.fn(async (..._args: unknown[]) => ({ ok: true, value }))
@@ -89,6 +90,19 @@ describe('native session tools', () => {
       { timeoutMs: OFFICE_PREVIEW_TIMEOUT_MS },
       { timeoutMs: OFFICE_PREVIEW_TIMEOUT_MS, maxResponseBytes: OFFICE_PREVIEW_MAX_RESPONSE_BYTES },
     ])
+  })
+  it('reads referenced Session images through the official read-only lookup', async () => {
+    const value = {
+      attachment: { attachmentId: 'sha256:abc', mediaType: 'image/jpeg', bytes: 3, width: 576, height: 1024 },
+      data: 'AAEC',
+    }
+    const { tools, rpc } = setup(value)
+    await expect(tools.readAttachment('s1', 'sha256:abc')).resolves.toEqual(value)
+    expect(rpc.mock.calls[0]?.slice(0, 2)).toMatchObject([
+      'harness.remote.call',
+      { endpoint: 'session/attachment', payload: { args: { request: { sessionId: 's1', attachmentId: 'sha256:abc' } } } },
+    ])
+    expect(rpc.mock.calls[0]?.[3]).toEqual({ maxResponseBytes: CHAT_ATTACHMENT_MAX_RESPONSE_BYTES })
   })
   it('executes slash lines through the Host command dispatcher', async () => {
     const { tools, rpc } = setup({ result: { kind: 'success', text: 'exported to zip' } })

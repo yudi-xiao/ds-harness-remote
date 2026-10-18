@@ -3,14 +3,16 @@ import type { AcpStream, CodexStream, CodexTimelineState } from '@dsh-remote/cli
 import { workspaceStableKey } from '../lib/workspace-key'
 import { strings as zhCN } from '../locales/i18n'
 import { loadAntigravityCatalog, mergeAntigravityCatalog } from '../services/antigravity'
+import { RemoteApiProxy } from '../services/api-proxy'
 import { loadCodexModels } from '../services/codex'
 import { cursorNativeId } from '../services/cursor'
 import { loadOpencodeCatalog, loadOpencodeModels, mergeOpencodeCatalog } from '../services/opencode'
 import { loadClaudeCatalog, loadClaudeModels, mergeClaudeCatalog } from '../services/claude'
 import { loadPiCatalog, loadPiModels, mergePiCatalog } from '../services/pi'
 import { AndroidRemoteRuntime } from '../services/remote-runtime'
+import { sessionAttachmentDataUri } from '../services/session-attachment'
 import { saveRecentWorkspaces } from '../services/storage'
-import type { ModelSelection, MuxStreamFrame, RemoteSession, WorkspaceShortcut } from '../types'
+import type { ImageMediaType, ModelSelection, MuxStreamFrame, RemoteSession, SessionAttachmentValue, WorkspaceShortcut } from '../types'
 import type { StoreAccess } from './store-state'
 
 export interface SessionAccess extends StoreAccess {
@@ -20,6 +22,8 @@ export interface SessionAccess extends StoreAccess {
 const MUX_FLUSH_MS = 100
 const MUX_FLUSH_MAX = 250
 const RECENT_WORKSPACE_LIMIT = 3
+const CHAT_IMAGE_LOADS = 3
+const CHAT_IMAGE_CACHE = 24
 
 /** Owns mutable connection generations, active streams and event-coalescing state. */
 export class SessionRuntime {
@@ -39,6 +43,12 @@ export class SessionRuntime {
   muxFlushTimer: ReturnType<typeof setTimeout> | undefined
   sessionLoadGeneration = 0
   reconnectFlight: Promise<boolean> | undefined
+  /** Decoded chat images keyed by durable attachment id; display-only and bounded. */
+  private readonly attachmentImages = new Map<string, string>()
+  /** In-flight `session/attachment` lookups, keyed by attachment id. */
+  private readonly attachmentLoads = new Map<string, Promise<void>>()
+  /** Lookups this connection generation already failed; avoids a per-frame retry loop. */
+  private readonly attachmentFailures = new Set<string>()
 
   constructor(private readonly store: StoreAccess) {}
 
@@ -92,6 +102,109 @@ export class SessionRuntime {
     // `adopted` is a Host-side fact (the durable queue received the prompt) and
     // survives reconnects; only the grace window restarts.
     this.vanishingQueueRpcIds.clear()
+  }
+
+  /**
+   * Resolve durable image references in one Session timeline through the
+   * official read-only `session/attachment` lookup. Only ids the Host proves
+   * are referenced by this exact Session are requested; failures leave the
+   * placeholder so a transient Host or transport error never blocks chat.
+   */
+  hydrateSessionImages(sessionId: string): void {
+    const state = this.store.get()
+    const items = state.messages[sessionId]
+    if (items === undefined) return
+    const session = state.sessions.find(item => item.sessionId === sessionId)
+      ?? (state.selectedSession?.sessionId === sessionId ? state.selectedSession : undefined)
+    // Tool-result attachments belong to native Harness Sessions; CodeX/ACP
+    // projections carry their own image bytes inline.
+    if (session?.backend !== undefined && session.backend !== 'harness') return
+    const cached: { attachmentId: string; uri: string }[] = []
+    const requests: { attachmentId: string; mediaType?: ImageMediaType }[] = []
+    for (const item of items) {
+      if (item.kind !== 'message' && item.kind !== 'tool') continue
+      for (const image of item.images ?? []) {
+        const attachmentId = image.attachmentId
+        if (attachmentId === undefined || image.uri !== undefined) continue
+        const uri = this.attachmentImages.get(attachmentId)
+        if (uri !== undefined) {
+          cached.push({ attachmentId, uri })
+          continue
+        }
+        if (this.attachmentLoads.has(attachmentId) || this.attachmentFailures.has(attachmentId)) continue
+        requests.push({ attachmentId, ...(image.mediaType === undefined ? {} : { mediaType: image.mediaType }) })
+      }
+    }
+    for (const entry of cached) this.applyAttachmentImage(sessionId, entry.attachmentId, entry.uri)
+    const slots = Math.max(0, CHAT_IMAGE_LOADS - this.attachmentLoads.size)
+    for (const request of requests.slice(0, slots)) {
+      this.loadAttachmentImage(sessionId, request.attachmentId, request.mediaType)
+    }
+  }
+
+  /** Retry image lookups that failed earlier, e.g. on a fresh history load. */
+  retryChatImages(): void {
+    this.attachmentFailures.clear()
+  }
+
+  private loadAttachmentImage(sessionId: string, attachmentId: string, mediaType?: ImageMediaType): void {
+    const load = (async () => {
+      try {
+        const value = await this.readSessionAttachment(sessionId, attachmentId)
+        const uri = sessionAttachmentDataUri(value, {
+          attachmentId,
+          ...(mediaType === undefined ? {} : { mediaType }),
+        })
+        if (uri === undefined) {
+          this.attachmentFailures.add(attachmentId)
+          return
+        }
+        this.attachmentImages.set(attachmentId, uri)
+        while (this.attachmentImages.size > CHAT_IMAGE_CACHE) {
+          const oldest = this.attachmentImages.keys().next().value
+          if (oldest === undefined) break
+          this.attachmentImages.delete(oldest)
+        }
+        this.applyAttachmentImage(sessionId, attachmentId, uri)
+      } catch {
+        // The placeholder remains; keep the failure local to this connection.
+        this.attachmentFailures.add(attachmentId)
+      }
+    })().finally(() => {
+      this.attachmentLoads.delete(attachmentId)
+      // Drain the rest of the loaded window without waiting for another frame.
+      queueMicrotask(() => this.hydrateSessionImages(sessionId))
+    })
+    this.attachmentLoads.set(attachmentId, load)
+  }
+
+  private readSessionAttachment(sessionId: string, attachmentId: string): Promise<SessionAttachmentValue> {
+    const proxy = this.connection.requireProxy()
+    return proxy instanceof RemoteApiProxy
+      ? proxy.sessionAttachment(sessionId, attachmentId)
+      : this.connection.requireSessionTools(sessionId).readAttachment(sessionId, attachmentId)
+  }
+
+  private applyAttachmentImage(sessionId: string, attachmentId: string, uri: string): void {
+    this.store.set(state => {
+      const items = state.messages[sessionId]
+      if (items === undefined) return {}
+      let changed = false
+      const next = items.map(item => {
+        if ((item.kind !== 'message' && item.kind !== 'tool') || item.images === undefined
+          || !item.images.some(image => image.attachmentId === attachmentId && image.uri === undefined)) {
+          return item
+        }
+        changed = true
+        return {
+          ...item,
+          images: item.images.map(image => image.attachmentId === attachmentId && image.uri === undefined
+            ? { ...image, uri }
+            : image),
+        }
+      })
+      return changed ? { messages: { ...state.messages, [sessionId]: next } } : {}
+    })
   }
 
   async refreshAntigravityCatalog(): Promise<void> {

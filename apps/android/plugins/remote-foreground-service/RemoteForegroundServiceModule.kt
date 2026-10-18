@@ -1,4 +1,5 @@
-package io.github.liguobao.dshremote
+// __DSH_REMOTE_PACKAGE__ is replaced with android.package by with-remote-foreground-service.cjs.
+package __DSH_REMOTE_PACKAGE__
 
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule

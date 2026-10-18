@@ -1,6 +1,6 @@
 # TODO
 
-更新日期：2026-10-18。本次发布版本统一为 `0.5.12`，Android `versionCode 50`；发布状态以 GitHub Release 工作流为准。
+更新日期：2026-10-19。个人生态分支 Android App 为 `0.6.0`（`versionCode 51`）；仓库 npm 包版本仍为 `0.5.12`，发布状态以 GitHub Release 工作流为准。
 
 Harness `0.2.1-rc.1` 为开发基线。保留 `0.2.0-rc.2` / rc.1 的官方 Typert Session V3。
 peer range 接纳 `0.2.2` 预发布版。版本范围不代表 runtime 验收通过。
@@ -10,6 +10,20 @@ legacy ApiProxy 不再作为兼容维护目标，已有实现仅保留。
 
 状态规则：勾选项只表示条目所述范围完成。源码实现、自动化验证与真机验收分别记录。
 RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真机验收。
+
+## 个人 Agent App 生态（2026-10-19）
+
+- [x] Android App 个人化：显示名 `Agent`、包名 `com.howlearnwood.agent`、`version 0.6.0`、`versionCode 51`、`runtimeVersion.policy = appVersion`。
+- [x] EAS Build 配置：`preview` 内部 APK / `production` AAB、本地 release 签名、Node 22.14.0 / pnpm 9.15.4 固定、个人 Server/账号预填；`eas-build-post-install` 钩子生成 workspace 包与 renderer。
+- [x] 接入 `expo-updates`；生成个人 keystore 并离线备份（`~/.dsh/personal/agent-signing`，不入库、不写日志）。
+- [x] 整理个人构建/部署/升级流程：`docs/personal-agent-app.zh.md`。
+- [x] 个人 Expo 设备授权登录、`eas init` 与 `update:configure`：`@shuohigh/dsh-agent`（projectId `61c55e4e-03c6-4faa-b7b7-dd9ac3f92175`）、`updates.url` 已写入，`preview` channel/branch 已创建。
+- [x] 首次 EAS 云构建 APK 成功（build `9066fff6-8f27-462a-af70-1b0688bb3b7e`）：APK 直链 <https://expo.dev/artifacts/eas/5BgA6HMtWEBSpxQDluIlsONLCOXZBrBN6a2rF7IBDRQ.apk>，136,257,561 bytes，SHA-256 `438E08B58EAAC0A0334ABFC9DC12AB2DCDE700ACD4E22E9E39A698406A25F177`。
+- [x] 首次 EAS Update 发布到 `preview` 分支（group `cf4a86d0-6519-4228-b3fd-73cb8fe6e5ea`，runtime `0.6.0`，update manifest `01a14fda-2087-7d8f-9502-5059721c8c5b`）。
+- [x] 校验 APK 内的 Hermes bundle 含 `session/attachment`、个人 Server URL/账号、`attachmentId` 与 `com.howlearnwood.agent`；`AndroidManifest.xml` 与 `assets/index.android.bundle` 均在包内。
+- [x] 校验 EAS Update 公网 manifest（`u.expo.dev/<projectId>`，`expo-platform: android` / `runtimeVersion 0.6.0` / `channel preview`）返回已发布更新 `01a14fda-2087-7d8f-9502-5059721c8c5b`。
+- [ ] 真机安装新 APK 并验证会话内图片回显。
+- [ ] 真机确认 OTA 拉取/回滚，以及 Cloudflare 个人 Server/Host/手机首次登录流程。
 
 ## 2026-10-18 版本审查后续
 
@@ -266,6 +280,9 @@ interrupt 与单次审批，不恢复旧 Android RPC。剩余工作：
 - [x] 重连后 mux/Gateway stream 重开与 history baseline 重建的真机验证
 - [x] WebRTC P2P/TURN 路径真机验证（react-native-webrtc 与 Host werift 互操作）
 - [x] 共享 Protocol 包统一执行协议 conformance fixtures；Android 保留自身授权、加密连接与恢复测试
+- [x] Chat 内工具结果图片回显：原生 `tool/result` / 历史图片块保留附件引用，经官方 `session/attachment`
+      按会话授权读取并在会话内按比例显示（折叠过程组可见、点击全屏）
+- [ ] Android APK / 真机与加密跨设备验证生成图片回显、历史重载和断线恢复；旧 Host 无该端点时保持占位
 - [ ] 在 Android 原生 runtime 执行跨端 conformance（Node 中共享协议测试不作为原生验收）
 
 `apps/android` 与 Mock Host 曾作为旧 Remote RPC 原型冻结；现在 Android 直接实现/消费官方

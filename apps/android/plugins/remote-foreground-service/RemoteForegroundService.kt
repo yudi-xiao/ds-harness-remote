@@ -1,4 +1,5 @@
-package io.github.liguobao.dshremote
+// __DSH_REMOTE_PACKAGE__ is replaced with android.package by with-remote-foreground-service.cjs.
+package __DSH_REMOTE_PACKAGE__
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -52,8 +53,8 @@ class RemoteForegroundService : Service() {
   }
 
   companion object {
-    private const val ACTION_START = "io.github.liguobao.dshremote.action.START"
-    private const val ACTION_STOP = "io.github.liguobao.dshremote.action.STOP"
+    private const val ACTION_START = "__DSH_REMOTE_PACKAGE__.action.START"
+    private const val ACTION_STOP = "__DSH_REMOTE_PACKAGE__.action.STOP"
     private const val CHANNEL_ID = "remote_connection"
     private const val NOTIFICATION_ID = 7401
 

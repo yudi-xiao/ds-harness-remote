@@ -37,6 +37,18 @@ function fakeCore(): RemoteClientCore & { rpcCalls: CoreRpcMock; emitEvent(event
       if (paramsRecord.method === 'session.history') {
         return { rpcId: paramsRecord.rpcId, result: { ok: true, value: { events: [], hasMore: false } } }
       }
+      if (paramsRecord.method === 'session.attachment') {
+        return {
+          rpcId: paramsRecord.rpcId,
+          result: {
+            ok: true,
+            value: {
+              attachment: { attachmentId: 'sha256:file', mediaType: 'image/jpeg', bytes: 3, width: 5, height: 6 },
+              data: 'AAEC',
+            },
+          },
+        }
+      }
       if (paramsRecord.method === 'session.models') {
         return { rpcId: paramsRecord.rpcId, result: { ok: true, value: { current: { provider: 'deepseek-official', model: 'deepseek-v4-flash' }, routable: true, groups: [], failures: [] } } }
       }
@@ -264,5 +276,23 @@ describe('Remote ApiProxy tunnel client', () => {
       method: 'session.history',
       payload: { sessionId: 's1', beforeSeq: 42, maxMessages: 20 },
     }), undefined)
+  })
+
+  it('reads referenced chat images through the official attachment lookup', async () => {
+    const core = fakeCore()
+    const proxy = new RemoteApiProxy(core)
+    await expect(proxy.sessionAttachment('s1', 'sha256:file')).resolves.toMatchObject({
+      attachment: { attachmentId: 'sha256:file', mediaType: 'image/jpeg' },
+      data: 'AAEC',
+    })
+    expect(core.rpcCalls).toHaveBeenCalledWith('harness.api.call', expect.objectContaining({
+      method: 'session.attachment',
+      payload: { sessionId: 's1', attachmentId: 'sha256:file' },
+    }), undefined)
+    core.rpcCalls.mockImplementationOnce(async (_method, params) => ({
+      rpcId: (params as { rpcId: string }).rpcId,
+      result: { ok: true, value: { attachment: {} } },
+    }))
+    await expect(proxy.sessionAttachment('s1', 'sha256:file')).rejects.toMatchObject({ code: 'INVALID_MESSAGE' })
   })
 })

@@ -337,6 +337,33 @@ export interface PromptImage {
 export interface ChatImage {
   uri?: string
   name?: string
+  /**
+   * Durable Host image reference carried by the session log and read through
+   * the official read-only `session/attachment` lookup. Inline prompt history
+   * may carry `data` instead; both forms are display-only.
+   */
+  attachmentId?: string
+  mediaType?: ImageMediaType
+  /** Intrinsic encoded size reported by the attachment reference (display aspect). */
+  width?: number
+  height?: number
+}
+
+/** Durable image reference returned by `session/attachment` (mirrors dsh-attachment). */
+export interface SessionAttachmentRef {
+  attachmentId: string
+  mediaType: ImageMediaType
+  bytes: number
+  width: number
+  height: number
+  name?: string
+}
+
+/** Official read-only `session/attachment` response value. */
+export interface SessionAttachmentValue {
+  attachment: SessionAttachmentRef
+  /** Canonical base64 of the stored image bytes. */
+  data: string
 }
 
 export interface ImageAttachmentLimits {
