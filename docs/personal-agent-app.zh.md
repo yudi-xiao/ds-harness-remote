@@ -32,6 +32,7 @@
   - 首个更新：group `a0c861df-5a03-488a-8029-145f823eadc3`，manifest <https://u.expo.dev/update/01a15012-b191-7a0c-8ca7-4816264dfdc3>。
   - 视频分块修复（JS-only）：`workspaceFiles/readBytes` 的二进制 `data` 会被 client-core 还原为 `Uint8Array`，原实现只接受 base64 字符串，导致点击播放报“视频文件不在会话工作区中”；现同时支持 `Uint8Array` 与 legacy base64。修复更新 group `8ac8104e-4fd4-467a-b421-ee18f86ae39f`，manifest <https://u.expo.dev/update/01a15022-7633-7606-83d3-ba305eb4017d>。
   - 诊断增强：关于页新增“运行版本 / 更新 ID / Bundle 来源（内置包或 OTA）”，便于确认当前实际运行的 JS 版本。最新更新 group `d05f1573-812f-4c3a-8405-341471e75d06`，manifest <https://u.expo.dev/update/01a15024-458f-7cf7-b051-fa404519c646>。
+  - 文件预览二进制修复：`workspaceFiles/readBytes` 的 `Uint8Array` 同样会被 Files 面板图片/PDF 预览读取；解析现同时接受两种形态（25 文件 / 143 测试）。最新更新 group `6f7a765d-5629-4f0a-86ed-df078268206e`，manifest <https://u.expo.dev/update/01a15026-2b27-76d8-afae-5e2215075fd5>。
 - **Host 侧前置条件**：本机 H3 工具已支持 `workspace_dir`（`C:\Users\shuoh\WebstormProjects\LLM\integrations\dsh\local-tools-mcp.cjs` + `media-result.cjs` + `services/h3-comfy.cjs` / `model-scheduler.cjs` / `services/inspect-video.py`，用 `runtime\h3-env` 的 PyAV 抽首帧）。模型需在调用 `generate_video` 时把当前会话工作区作为 `workspace_dir` 传入；MCP 进程需在 DSH 新会话中重启后才会暴露新参数。
 
 ## 组成

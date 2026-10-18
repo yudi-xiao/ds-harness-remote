@@ -242,6 +242,26 @@ describe('workspace image and PDF previews', () => {
     ])
   })
 
+  it('accepts Uint8Array binary chunks reconstructed by client-core', async () => {
+    const { mocks, tools } = fakeTools()
+    const image = png(2, 2, 8)
+    mocks.statFile.mockResolvedValue(stat({ bytes: image.byteLength }))
+    mocks.readBytes.mockResolvedValueOnce({
+      absolutePath: IMAGE_ABSOLUTE,
+      version: VERSION,
+      offset: 0,
+      bytes: image.byteLength,
+      data: image,
+      eof: true,
+    })
+
+    await expect(loadWorkspacePreview(tools, 's1', IMAGE_PATH, 'image')).resolves.toEqual({
+      data: base64(image),
+      mimeType: 'image/png',
+      missingFonts: [],
+    })
+  })
+
   it('reads unknown-size files in 512 KiB chunks until the Host reports the end', async () => {
     const { mocks, tools } = fakeTools()
     const image = png(1, 1, PREVIEW_CHUNK_BYTES)
