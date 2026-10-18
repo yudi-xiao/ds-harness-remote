@@ -24,8 +24,8 @@
     }
   ],
   "vars": {
-    "DSH_SERVER_ACCOUNT": "owner@example.com",
-    "DSH_SERVER_PUBLIC_URL": "http://localhost:8787"
+    "DSH_SERVER_ACCOUNT": "shuohigh",
+    "DSH_SERVER_PUBLIC_URL": "https://remote-dsh.howlearnwood.com"
   },
   "dev": {
     "port": 8787

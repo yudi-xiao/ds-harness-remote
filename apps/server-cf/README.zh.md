@@ -29,7 +29,7 @@ Durable Object 使用 WebSocket Hibernation API：设备身份放在 socket atta
    pnpm --filter @dsh-remote/server-cf assets
    ```
 
-2. 编辑 [`wrangler.jsonc`](wrangler.jsonc) 的 `vars`：`DSH_SERVER_ACCOUNT` 和 `DSH_SERVER_PUBLIC_URL` 必须是实际 HTTPS 站点根地址（例如 `https://remote.example.com`）。
+2. 检查 [`wrangler.jsonc`](wrangler.jsonc) 的 `vars`：`DSH_SERVER_ACCOUNT` 和 `DSH_SERVER_PUBLIC_URL` 必须是实际 HTTPS 站点根地址（例如 `https://remote.example.com`）。本分支已配置为 `shuohigh` / `https://remote-dsh.howlearnwood.com` 部署；部署到你自己的账号和域名时替换这两项。
 
 3. 写入密码 secret（至少 12 字符，不要提交到仓库）：
 
@@ -38,15 +38,41 @@ Durable Object 使用 WebSocket Hibernation API：设备身份放在 socket atta
    pnpm exec wrangler secret put DSH_SERVER_PASSWORD
    ```
 
-4. 部署：
+4. 部署（包脚本名 `deploy` 与 pnpm 内置命令冲突，必须用 `run`）：
 
    ```bash
-   pnpm --filter @dsh-remote/server-cf deploy
+   pnpm --filter @dsh-remote/server-cf run deploy
    ```
 
    首次部署会创建 `RemoteGateway` Durable Object。打开 `https://<你的域名>/` 查看登录页；Host 和客户端填写同一个地址、使用同一账号密码登录。
 
-5. 验证健康检查：`GET /health` 返回 `{"status":"ok"}`。Host 插件与客户端按原方式注册设备和建立加密连接。
+5. 自定义域名只需绑定一次：**Workers 和 Pages → dsh-remote-server → Settings → Domains & Routes → Add custom domain**，域名必须与 DNS zone 在同一个 Cloudflare 账号。绑定会跨后续部署保留，刻意不写入 `wrangler.jsonc` 的 `routes`，这样 CI 里无 Cloudflare 凭据的 `wrangler deploy --dry-run` 仍能通过。等 TLS 证书/DNS 生效后再让 Host 和客户端使用该地址。
+
+6. 验证 `GET /health` 返回 `{"status":"ok"}`，然后打开登录页。
+
+## 从 GitHub 同步部署（Workers Builds）
+
+本分支的正式发布计划通过 Cloudflare Git 集成推送，而不是手动 `wrangler deploy`。Workers Builds 项目建议配置（首次 Git 部署尚未在本机验证）：
+
+- 仓库/分支：本仓库及选定的生产分支。
+- Root directory：仓库根目录。
+- Build command：
+
+  ```bash
+  corepack enable pnpm && pnpm install --frozen-lockfile && pnpm --filter @dsh-remote/protocol build && pnpm --filter @dsh-remote/server-cf assets
+  ```
+
+  若构建镜像没有自带 Corepack，先显式安装 pnpm（`npm install -g pnpm@9.15.4`）。
+
+- Deploy command：
+
+  ```bash
+  pnpm --filter @dsh-remote/server-cf run deploy
+  ```
+
+- 在 **Worker → Settings → Variables and Secrets** 中把 `DSH_SERVER_PASSWORD` 添加为加密 secret。`DSH_SERVER_ACCOUNT` 和 `DSH_SERVER_PUBLIC_URL` 保留在 `wrangler.jsonc`，这样每次 Git 构建都会生成正确的站点地址。自定义域名按手动部署步骤绑定一次即可。
+- 修改密码后，下一次请求会使所有设备 token/会话失效，所有设备需要重新登录/注册。
+- 每次部署后通过自定义域名检查 `https://<域名>/health` 和登录页。
 
 ## 本地开发与验证
 
@@ -65,6 +91,8 @@ pnpm --filter @dsh-remote/server-cf build     # wrangler deploy --dry-run
 ```
 
 2026-10-18 本地验证（wrangler 4.151.1 / Node 24.21.0）：`wrangler deploy --dry-run` 打包通过；`wrangler dev` 下 `e2e-local.mjs` 的 40 项断言全部通过，覆盖 REST 账号/设备凭据、Cookie、设备列表/在线状态、hello/hello.ack、连接生命周期、Noise IK 握手转发、双向加密 Relay、重放拒绝、撤销后即时断线与 token family 失效。另有 `vitest`（@cloudflare/vitest-pool-workers 0.23.0 + vitest 4.1.12）3 个集成用例通过；DO SQLite 在 `wrangler dev` 进程重启后保留账号会话、设备 token 与 refresh token（详见 [docs/cf-testing.md](docs/cf-testing.md)）。
+
+同一天还在真实 Cloudflare 账户与自定义域名上跑通同一组 40 项断言；随后删除 Worker 并按 `wrangler.jsonc` 重新部署，清除 E2E 测试设备，干净实例复查了 `/health`、登录和空设备列表。真实 Desktop/Android 跨网络验收仍未完成。
 
 ## 与 `apps/server` 的差异与限制
 

@@ -70,6 +70,7 @@
 ## 7. 本地验证环境注意
 
 - `wrangler dev` 使用包内固定版本：`pnpm --filter @dsh-remote/server-cf dev`（`pnpm-lock.yaml` 为 4.151.1）。根 `node_modules/wrangler` 可能是 `@cloudflare/vitest-pool-workers@0.23.0` 自带的 4.124.0，直接执行会得到不同 workerd 行为（本次调试中曾导致 logout 后 500），不要用它验证。
+- 自定义域名通过 Dashboard（**Settings → Domains & Routes → Add custom domain**）或 `PUT /accounts/{id}/workers/domains` 绑定；删除 Worker 会一并移除绑定，重新部署后需要重新添加。刻意不把 custom domain 写进 `wrangler.jsonc` 的 `routes`，以便没有 Cloudflare 凭据的 CI `wrangler deploy --dry-run` 仍能通过；若改用 `routes`，CI 必须提供凭据。
 - 本机 DSH 沙箱禁止 Node 通过管道 `spawn` 子进程，esbuild/workerd/wrangler 会报 `spawn EPERM`；构建与测试需在放宽权限的终端执行。这是验证环境限制，不是代码问题。
 - esbuild 在系统 Temp 目录删除临时文件可能被拒绝（`Access is denied`），把 `TMP`/`TEMP` 指向工作区目录即可。
 - `@cloudflare/vitest-pool-workers` 已被官方重命名为 `@cloudflare/vitest-plugin`，0.23.0 会打印迁移警告；当前固定使用 0.23.0 + vitest 4.1.12，对应测试见 `docs/cf-testing.md`。

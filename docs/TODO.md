@@ -295,7 +295,7 @@ ApiProxy / Typert Remote contract，不得在 Plugin Host 恢复 `sessions.*`、
 - [ ] 完成 Docker 镜像构建与容器启动验收。记录健康检查和凭据持久化结果。
 - [ ] 真实 Desktop/Android/VS Code 跨机 E2E 与反向代理长期连接回归
 - [x] Cloudflare Workers 版（`apps/server-cf`）：Worker + SQLite-backed DO + Workers Assets，REST/设备认证/Control+Noise 握手转发与 opaque Relay 对齐 Node 版；本地 `wrangler dev` E2E 40 项、vitest 3 项、类型检查与 dry-run 通过
-- [ ] 在真实 Cloudflare 账户部署 `apps/server-cf`（DO/Assets/secret、自定义域名与套餐额度），验收健康检查、登录、设备注册/在线状态与撤销
+- [x] 在真实 Cloudflare 账户部署 `apps/server-cf`（DO/Assets/secret、自定义域名）：2026-10-18 线上 40 项 E2E 通过（健康检查、登录、设备注册/在线状态与撤销、Noise 握手转发、密文 Relay、refresh 轮换）；随后重置 DO 清除 E2E 测试设备
 - [ ] 真实 Desktop/Android 客户端经 Cloudflare 的跨网络 E2E、断线重连与长期连接稳定性；密码校验为 HMAC-SHA256，不能导入 Node 版 `data/state.json`
 
 ## 原生侧栏与开发预览（2026-09-20）

@@ -51,3 +51,11 @@ pnpm --filter @dsh-remote/server-cf build     # wrangler deploy --dry-run
 - `wrangler dev` 必须使用包内固定版本（`pnpm --filter @dsh-remote/server-cf dev`，lockfile 为 4.151.1）。根 `node_modules/wrangler` 是 vitest pool 自带的 4.124.0，直接执行会得到较旧 workerd，曾导致 logout 后 500，不能作为验证环境。
 - vitest pool 内置 workerd 支持的 compatibility date 上限为 `2026-08-22`，`wrangler.jsonc` 当前为 `2026-08-01`。
 - 测试中的 identityKey 使用固定的规范 32 字节 base64url 字符串（无需引入 `@dsh-remote/crypto`，避免 workerd 测试环境解析 workspace 包依赖）。
+
+## 5. 真实 Cloudflare 账户部署验证（2026-10-18）
+
+- 部署：真实账户 + 自定义域名 `https://remote-dsh.howlearnwood.com`，wrangler 4.151.1，Durable Object migration `v1`，Workers Assets 7 个文件，密码为 Worker secret；`vars` 来自 `wrangler.jsonc`。
+- 首次部署后直接对线上地址运行 `node apps/server-cf/scripts/e2e-local.mjs`：**40/40 断言 PASS**。覆盖真实 Workers / DO / Assets、自定义域名 TLS、REST 账号与设备凭据、hello/hello.ack、Noise IK 握手转发、双向密文 relay、replay 拒绝、撤销断线与 refresh 轮换。
+- E2E 会注册 `cf-host-*` / `cf-client-*` 测试设备，而最小 Server 没有账号级设备删除接口。验证后删除 Worker（连带 DO SQLite 与域名绑定），再按 `wrangler.jsonc` 重新 `run deploy`、重设 `DSH_SERVER_PASSWORD` secret 并重新绑定自定义域名，得到空设备库；最终复查 `/health` 200、登录 200、设备列表 0。
+- 因此不要把该 E2E 直接跑在已有真实设备的长期生产实例上；需要线上验收时优先使用新 Worker 名/独立账户，或接受随后重置 DO。
+- 本轮只验证了脚本客户端；真实 Desktop/Android 跨网络连接、断线重连与长期稳定性仍未验收。

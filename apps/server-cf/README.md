@@ -29,7 +29,7 @@ Requirements: Node.js 22, pnpm 9.15.4, a Cloudflare account (SQLite-backed Durab
    pnpm --filter @dsh-remote/server-cf assets
    ```
 
-2. Edit `vars` in [`wrangler.jsonc`](wrangler.jsonc): `DSH_SERVER_ACCOUNT` and `DSH_SERVER_PUBLIC_URL` must point at the real HTTPS origin (for example `https://remote.example.com`).
+2. Review `vars` in [`wrangler.jsonc`](wrangler.jsonc): `DSH_SERVER_ACCOUNT` and `DSH_SERVER_PUBLIC_URL` must point at the real HTTPS origin (for example `https://remote.example.com`). This fork is already configured for the `shuohigh` / `https://remote-dsh.howlearnwood.com` deployment; replace both values when deploying your own account and domain.
 
 3. Store the password as a secret (at least 12 characters, never commit it):
 
@@ -38,15 +38,41 @@ Requirements: Node.js 22, pnpm 9.15.4, a Cloudflare account (SQLite-backed Durab
    pnpm exec wrangler secret put DSH_SERVER_PASSWORD
    ```
 
-4. Deploy:
+4. Deploy (the package script is named `deploy`, which collides with pnpm's built-in command, so use `run`):
 
    ```bash
-   pnpm --filter @dsh-remote/server-cf deploy
+   pnpm --filter @dsh-remote/server-cf run deploy
    ```
 
    The first deployment creates the `RemoteGateway` Durable Object. Open `https://<your-domain>/` for the login page; Host and clients use the same address and the same account/password.
 
-5. Verify `GET /health` returns `{"status":"ok"}`.
+5. Attach the custom domain once, from **Workers & Pages → dsh-remote-server → Settings → Domains & Routes → Add custom domain**. The binding must live in the same Cloudflare account as the DNS zone. It persists across later deployments and is intentionally kept out of `wrangler.jsonc` `routes`, so `wrangler deploy --dry-run` in CI still works without Cloudflare credentials. Wait for the TLS certificate/DNS record to become active before pointing Hosts and clients at the origin.
+
+6. Verify `GET /health` returns `{"status":"ok"}`, then open the login page.
+
+## Deploy from GitHub (Workers Builds)
+
+The production rollout for this fork is connected through Cloudflare's Git integration instead of manual `wrangler deploy`. Suggested settings for the Workers Builds project (first Git deployment not yet verified locally):
+
+- Repository/branch: this repository and the chosen production branch.
+- Root directory: repository root.
+- Build command:
+
+  ```bash
+  corepack enable pnpm && pnpm install --frozen-lockfile && pnpm --filter @dsh-remote/protocol build && pnpm --filter @dsh-remote/server-cf assets
+  ```
+
+  If the build image does not ship Corepack, install pnpm explicitly first (`npm install -g pnpm@9.15.4`).
+
+- Deploy command:
+
+  ```bash
+  pnpm --filter @dsh-remote/server-cf run deploy
+  ```
+
+- Add `DSH_SERVER_PASSWORD` under **Worker → Settings → Variables and Secrets** as an encrypted secret. `DSH_SERVER_ACCOUNT` and `DSH_SERVER_PUBLIC_URL` stay in `wrangler.jsonc`, so every Git build produces the correct origin. Bind the custom domain once as described in the manual deployment steps.
+- Changing the password invalidates all device tokens/sessions on the next request, so every device has to sign in again afterwards.
+- After each deployment verify `https://<domain>/health` and the login page through the custom domain.
 
 ## Local development and verification
 
@@ -65,6 +91,8 @@ pnpm --filter @dsh-remote/server-cf build     # wrangler deploy --dry-run
 ```
 
 Local verification on 2026-10-18 (wrangler 4.151.1 / Node 24.21.0): `wrangler deploy --dry-run` bundled successfully, and all 40 assertions of `e2e-local.mjs` passed against `wrangler dev`, covering REST account/device credentials, cookies, device list/presence, hello/hello.ack, connection lifecycle, Noise IK handshake forwarding, bidirectional encrypted relay, replay rejection, and immediate disconnect plus token-family revocation. In addition, 3 integration tests passed under `vitest` (@cloudflare/vitest-pool-workers 0.23.0 + vitest 4.1.12), and DO SQLite kept account sessions, device tokens and refresh tokens across a `wrangler dev` restart (see [docs/cf-testing.md](docs/cf-testing.md)).
+
+The same 40 assertions also passed against a real Cloudflare account and custom domain on 2026-10-18. The Worker was then deleted and redeployed from `wrangler.jsonc` to remove the E2E test devices; the clean instance re-verified `/health`, login and an empty device list. Real Desktop/Android cross-network acceptance is still pending.
 
 ## Differences and limitations vs `apps/server`
 
