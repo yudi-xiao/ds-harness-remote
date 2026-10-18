@@ -621,4 +621,6 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   与 Files 面板二进制分块修复 `6f7a765d-5629-4f0a-86ed-df078268206e`
   （id `01a15026-2b27-76d8-afae-5e2215075fd5`）；About 页显示运行版本 / 更新 ID / Bundle 来源
   （内置包或 OTA）。公网 manifest 返回最新更新。
-  0.7.0 APK 已构建/安装，登录保持与新品牌已通过真机确认；视频播放待拉取 OTA 修复后复测。
+  0.7.0 APK 已构建/安装；真机验收通过（2026-10-19）：关于页显示更新 ID `01a15026-…`（OTA），
+  会话内视频卡片点击后成功下载并播放（有声），登录保持、`DSH Remote Agent` 名称与新图标均已确认。
+  可选后续：新对话中真实生成一条 H3 视频（含封面），验证 generate_video → workspace 复制 → 卡片播放完整链路。
