@@ -52,17 +52,15 @@ Durable Object 使用 WebSocket Hibernation API：设备身份放在 socket atta
 
 ## 从 GitHub 同步部署（Workers Builds）
 
-本分支的正式发布计划通过 Cloudflare Git 集成推送，而不是手动 `wrangler deploy`。Workers Builds 项目建议配置（首次 Git 部署尚未在本机验证）：
+本分支的正式发布已接入 Cloudflare Workers Builds：每次推送到 [`yudi-xiao/ds-harness-remote`](https://github.com/yudi-xiao/ds-harness-remote) 的 `main` 都会自动构建并部署 `dsh-remote-server` Worker。
 
-- 仓库/分支：本仓库及选定的生产分支。
-- Root directory：仓库根目录。
+已配置的生产 trigger（仅 `main`，仓库根目录）：
+
 - Build command：
 
   ```bash
-  corepack enable pnpm && pnpm install --frozen-lockfile && pnpm --filter @dsh-remote/protocol build && pnpm --filter @dsh-remote/server-cf assets
+  pnpm install --frozen-lockfile && pnpm --filter @dsh-remote/protocol build && pnpm --filter @dsh-remote/server-cf assets
   ```
-
-  若构建镜像没有自带 Corepack，先显式安装 pnpm（`npm install -g pnpm@9.15.4`）。
 
 - Deploy command：
 
@@ -70,9 +68,12 @@ Durable Object 使用 WebSocket Hibernation API：设备身份放在 socket atta
   pnpm --filter @dsh-remote/server-cf run deploy
   ```
 
-- 在 **Worker → Settings → Variables and Secrets** 中把 `DSH_SERVER_PASSWORD` 添加为加密 secret。`DSH_SERVER_ACCOUNT` 和 `DSH_SERVER_PUBLIC_URL` 保留在 `wrangler.jsonc`，这样每次 Git 构建都会生成正确的站点地址。自定义域名按手动部署步骤绑定一次即可。
-- 修改密码后，下一次请求会使所有设备 token/会话失效，所有设备需要重新登录/注册。
-- 每次部署后通过自定义域名检查 `https://<域名>/health` 和登录页。
+- 构建环境：`NODE_VERSION=22`、`PNPM_VERSION=9.15.4`、`SKIP_DEPENDENCY_INSTALL=1`（由显式 `pnpm install` 取代自动安装步骤）；已开启构建缓存。
+- `DSH_SERVER_ACCOUNT` 和 `DSH_SERVER_PUBLIC_URL` 保留在 `wrangler.jsonc`，每次构建都会生成正确的站点地址；`DSH_SERVER_PASSWORD` 保存在 **Worker → Settings → Variables and Secrets**，跨部署保留。修改密码后下一次请求会使所有设备 token/会话失效。
+- 自定义域名只需在 **Settings → Domains & Routes** 绑定一次，后续部署会继续沿用。
+- 连接仓库需要 Cloudflare Workers and Pages GitHub App，以及一个仅用于 Builds 配置 API 的 user-scoped token（权限 **Workers Builds Configuration: Edit** + **Workers Scripts: Read**）；两者都不会写入本仓库。
+
+2026-10-18 已验证：首次手动触发的构建（`Node 22.23.3`、`pnpm 9.15.4`、1188 个包、assets + `wrangler deploy`）成功，随后通过自定义域名复查了 `/health` 与登录。之后每次推送到 `main` 都会执行同一个 trigger。
 
 ## 本地开发与验证
 

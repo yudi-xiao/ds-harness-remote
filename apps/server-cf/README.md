@@ -52,17 +52,15 @@ Requirements: Node.js 22, pnpm 9.15.4, a Cloudflare account (SQLite-backed Durab
 
 ## Deploy from GitHub (Workers Builds)
 
-The production rollout for this fork is connected through Cloudflare's Git integration instead of manual `wrangler deploy`. Suggested settings for the Workers Builds project (first Git deployment not yet verified locally):
+Production deploys for this fork are connected through Cloudflare Workers Builds: every push to `main` on [`yudi-xiao/ds-harness-remote`](https://github.com/yudi-xiao/ds-harness-remote) builds and deploys the `dsh-remote-server` Worker.
 
-- Repository/branch: this repository and the chosen production branch.
-- Root directory: repository root.
+Configured production trigger (`main` only, repository root):
+
 - Build command:
 
   ```bash
-  corepack enable pnpm && pnpm install --frozen-lockfile && pnpm --filter @dsh-remote/protocol build && pnpm --filter @dsh-remote/server-cf assets
+  pnpm install --frozen-lockfile && pnpm --filter @dsh-remote/protocol build && pnpm --filter @dsh-remote/server-cf assets
   ```
-
-  If the build image does not ship Corepack, install pnpm explicitly first (`npm install -g pnpm@9.15.4`).
 
 - Deploy command:
 
@@ -70,9 +68,12 @@ The production rollout for this fork is connected through Cloudflare's Git integ
   pnpm --filter @dsh-remote/server-cf run deploy
   ```
 
-- Add `DSH_SERVER_PASSWORD` under **Worker → Settings → Variables and Secrets** as an encrypted secret. `DSH_SERVER_ACCOUNT` and `DSH_SERVER_PUBLIC_URL` stay in `wrangler.jsonc`, so every Git build produces the correct origin. Bind the custom domain once as described in the manual deployment steps.
-- Changing the password invalidates all device tokens/sessions on the next request, so every device has to sign in again afterwards.
-- After each deployment verify `https://<domain>/health` and the login page through the custom domain.
+- Build environment: `NODE_VERSION=22`, `PNPM_VERSION=9.15.4`, `SKIP_DEPENDENCY_INSTALL=1` (the explicit `pnpm install` replaces the automatic dependency step); build caching is enabled.
+- `DSH_SERVER_ACCOUNT` and `DSH_SERVER_PUBLIC_URL` stay in `wrangler.jsonc`, so every build produces the correct origin. `DSH_SERVER_PASSWORD` is stored under **Worker → Settings → Variables and Secrets** and survives deployments; changing it invalidates every device token/session on the next request.
+- The custom domain is bound once under **Settings → Domains & Routes** and survives later deployments.
+- Connecting the repository needs the Cloudflare Workers & Pages GitHub App plus a one-time user-scoped API token with **Workers Builds Configuration: Edit** and **Workers Scripts: Read** for the Builds configuration API. Neither credential is stored in this repository.
+
+Verified on 2026-10-18: the first manual build (`Node 22.23.3`, `pnpm 9.15.4`, 1188 packages, assets + `wrangler deploy`) succeeded, and `/health` plus login were re-checked against the custom domain afterwards. Every subsequent push to `main` runs the same trigger.
 
 ## Local development and verification
 
