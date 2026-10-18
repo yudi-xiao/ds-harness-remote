@@ -23,7 +23,6 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native'
 import {
-  AccessibilityInfo,
   ActivityIndicator,
   Alert,
   BackHandler,
@@ -38,11 +37,10 @@ import {
   View,
 } from 'react-native'
 import Svg,{ Path } from 'react-native-svg'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { strings as zhCN } from '../locales/i18n'
 import { sessionPermissions } from '../services/session-permissions'
 import type { SkillEntry } from '../services/session-tools'
-import type { CustomPrompt } from '../services/storage'
-import { BUILT_IN_PROMPTS, loadCustomPrompts, saveCustomPrompts } from '../services/storage'
 import { hasVisibleMessageText } from '../state/event-reducer'
 import type { ChatSection } from '../state/message-helpers'
 import { chatSections, inboxQueuedItems, inboxRpcIds, mergeReplyReasoning } from '../state/message-helpers'
@@ -61,7 +59,7 @@ import type {
 } from '../types'
 import { BlurHeaderFrame, IconButton, TopBar } from '../ui/components'
 import { FISH_LOGO_PATH, FISH_LOGO_VIEWBOX } from '../ui/fish-logo'
-import { KeyboardInset } from '../ui/keyboard-inset'
+import { KeyboardInset, useKeyboardInsetState } from '../ui/keyboard-inset'
 import { markdownFilePath, MarkdownLinkProvider } from '../ui/markdown'
 import type { MentionGroup, MentionItem, MentionType } from '../ui/mention-popover'
 import {
@@ -98,9 +96,6 @@ import {
   ModePicker,
   permissionDisplayName,
   PermissionPicker,
-  PromptEditor,
-  PromptsManager,
-  PromptsPicker,
   ToolAccessPicker,
   WorkspacePicker,
 } from './chat/pickers'
@@ -122,7 +117,7 @@ const LONG_DRAFT_HINT = 12_000
 /** Hard cap mirroring the largest backend prompt budget (ACP/CodeX 256 KiB). */
 const LONG_DRAFT_MAX = 256_000
 
-export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspaces }: { onBack: () => void; onOpenDevices: () => void; onNewSession?: () => void; onOpenWorkspaces?: (focusWorkspaceKey?: string) => void }) {
+export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack: () => void; onOpenDevices: () => void; onOpenWorkspaces?: (focusWorkspaceKey?: string) => void }) {
   // New subagent children and running-state changes must reach `sessions`
   // without leaving the chat (the list screens unmount here).
   useLiveSessionStatus()
@@ -177,13 +172,6 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
   const [toolPickerOpen, setToolPickerOpen] = useState(false)
   const [toolsMode, setToolsMode] = useState<'files' | 'terminal'>()
   const [fileLinkPath, setFileLinkPath] = useState<string>()
-  const [promptsPickerOpen, setPromptsPickerOpen] = useState(false)
-  const [customPrompts, setCustomPrompts] = useState<readonly CustomPrompt[]>()
-  const [promptEditing, setPromptEditing] = useState<CustomPrompt | 'new' | null>(null)
-  const [promptsManagerOpen, setPromptsManagerOpen] = useState(false)
-  const [promptsLoading, setPromptsLoading] = useState(false)
-  const promptsLoadingRef = useRef(false)
-  const promptMutatedRef = useRef(false)
   // `/` command and `@` reference popover state anchored to the composer cursor.
   const [mentionType, setMentionType] = useState<MentionType | null>(null)
   const [mentionQuery, setMentionQuery] = useState('')
@@ -220,26 +208,6 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
     return () => controller.abort()
   }, [session?.sessionId, session?.backend, inlinePermissionOptions, connection.phase, permissionPickerOpen, permissionRevision])
   useEffect(() => { setToolsMode(undefined) }, [session?.sessionId, connection.phase])
-  // Composer quick prompts: load built-ins and saved entries once per connection.
-  useEffect(() => {
-    if (connection.phase !== 'connected') return
-    if (customPrompts !== undefined || promptsLoadingRef.current) return
-    promptsLoadingRef.current = true
-    setPromptsLoading(true)
-    let cancelled = false
-    void loadCustomPrompts()
-      .then(items => {
-        if (cancelled || promptMutatedRef.current) return
-        setCustomPrompts(items)
-      })
-      .finally(() => {
-        promptsLoadingRef.current = false
-        if (!cancelled) setPromptsLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [connection.phase, customPrompts])
   // The mode (agent-preset) roster is deployment-level; fetch it once per connection.
   useEffect(() => {
     if (connection.phase !== 'connected' || session?.backend === 'codex') return
@@ -345,7 +313,7 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
   const sessionId = session?.sessionId
   const panelOpen = plusMenuOpen || modelPickerOpen || modePickerOpen || permissionPickerOpen
     || workspacePickerOpen || toolPickerOpen || toolsMode !== undefined || trajectory || mentionType !== null
-    || promptsPickerOpen || promptsManagerOpen || promptEditing !== null || subagentsOpen || teamOpen || sessionInfoOpen
+    || subagentsOpen || teamOpen || sessionInfoOpen
 
   const { colors } = useTheme()
   const styles = useThemedStyles(createStyles)
@@ -355,6 +323,14 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
   const plusMenuListMaxHeight = usePickerListMaxHeight()
   const compactComposer = landscape || compactHeight
   const composerInputMaxHeight = compactComposer ? Math.max(48, Math.min(96, Math.round(height * 0.22))) : 126
+  const insets = useSafeAreaInsets()
+  const keyboard = useKeyboardInsetState()
+  // While the IME is open, grow the prompt field to use the visible area above
+  // it (the phone OS keyboard usually eats half the screen). Closing the IME
+  // returns the field to its normal one-to-several-line height.
+  const expandedInputHeight = keyboard.visible
+    ? Math.max(compactComposer ? 96 : 140, height - keyboard.overlap - insets.top - 56 - 136)
+    : undefined
   const readableColumn = { width: '100%' as const, maxWidth: contentMaxWidth, alignSelf: 'center' as const }
 
   const scrollToBottom = useCallback((animated: boolean) => {
@@ -517,20 +493,6 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
         setToolPickerOpen(false)
         return true
       }
-      if (promptEditing !== null) {
-        setPromptEditing(null)
-        setPromptsManagerOpen(true)
-        return true
-      }
-      if (promptsManagerOpen) {
-        setPromptsManagerOpen(false)
-        setPromptsPickerOpen(true)
-        return true
-      }
-      if (promptsPickerOpen) {
-        setPromptsPickerOpen(false)
-        return true
-      }
       if (toolsMode !== undefined) {
         setToolsMode(undefined)
         setFileLinkPath(undefined)
@@ -550,7 +512,7 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
       return true
     })
     return () => subscription.remove()
-  }, [modePickerOpen, modelPickerOpen, permissionPickerOpen, plusMenuOpen, toolPickerOpen, toolsMode, workspacePickerOpen, trajectory, promptsPickerOpen, promptsManagerOpen, promptEditing])
+  }, [modePickerOpen, modelPickerOpen, permissionPickerOpen, plusMenuOpen, toolPickerOpen, toolsMode, workspacePickerOpen, trajectory])
 
   const skillItems: MentionItem[] = useMemo(() => (skillCatalog ?? []).map(row => ({
     id: `skill:${row.name}`,
@@ -715,12 +677,6 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
     setPlusMenuOpen(false)
   }
 
-  const openPromptsPicker = () => {
-    Keyboard.dismiss()
-    setMentionType(null)
-    setPromptsPickerOpen(true)
-  }
-
   const handleBack = () => {
     Keyboard.dismiss()
     if (trajectory) {
@@ -797,72 +753,23 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
     setToolsMode(mode)
   }
 
-  const startNewSession = async () => {
-    if (newSessionPending || busy !== undefined) return
+  /** Create a blank conversation; an undefined workspace means unassigned. */
+  const createChat = async (workspaceId?: string): Promise<boolean> => {
+    if (newSessionPending || busy !== undefined) return false
     setNewSessionPending(true)
     try {
-      const created = await createSession(currentWorkspace?.workspaceId)
-      if (created) {
-        onNewSession?.()
-      } else {
+      const created = await createSession(workspaceId)
+      if (!created) {
         Alert.alert(zhCN.chat.newChatFailedTitle, zhCN.chat.newChatFailedBody)
+        return false
       }
+      applyDraft('')
+      setImages([])
+      setSessionsOpen(false)
+      return true
     } finally {
       setNewSessionPending(false)
     }
-  }
-
-  const sendPrompt = async (prompt: CustomPrompt) => {
-    setPromptsPickerOpen(false)
-    const outcome = await sendMessage(prompt.text)
-    if (outcome === 'sent') AccessibilityInfo.announceForAccessibility(zhCN.chat.toolPromptSent(prompt.title))
-    else if (outcome === 'rejected') Alert.alert(zhCN.chat.toolPromptSendFailed, zhCN.chat.toolPromptSendFailed)
-  }
-
-  const persistPrompts = async (next: readonly CustomPrompt[]): Promise<boolean> => {
-    if (promptsLoading) return false
-    promptMutatedRef.current = true
-    const previous = customPrompts ?? BUILT_IN_PROMPTS
-    setCustomPrompts(next)
-    // Built-ins are re-seeded on every load, so a deleted one only stays gone
-    // when its id is recorded; edited built-ins keep their id and are saved as
-    // overrides inside `next`.
-    const removed = BUILT_IN_PROMPTS
-      .filter(item => !next.some(prompt => prompt.id === item.id))
-      .map(item => item.id)
-    try {
-      await saveCustomPrompts(next, removed)
-      return true
-    } catch {
-      setCustomPrompts(previous)
-      Alert.alert(zhCN.chat.toolPromptSaveFailedTitle, zhCN.chat.toolPromptSaveFailedBody)
-      return false
-    }
-  }
-
-  const savePromptEdit = async (title: string, text: string) => {
-    if (promptsLoading) return
-    const editing = promptEditing
-    const trimmedTitle = title.trim()
-    const trimmedText = text.trim()
-    if (trimmedTitle === '' || trimmedText === '') return
-    const current = customPrompts ?? BUILT_IN_PROMPTS
-    let ok = false
-    if (editing === 'new') {
-      ok = await persistPrompts([...current, { id: `prompt-${Date.now()}`, title: trimmedTitle, text: trimmedText }])
-    } else if (editing !== null) {
-      ok = await persistPrompts(current.map(item => item.id === editing.id ? { ...item, title: trimmedTitle, text: trimmedText } : item))
-    }
-    if (ok) {
-      setPromptEditing(null)
-      setPromptsManagerOpen(true)
-    }
-  }
-
-  const deletePrompt = async (prompt: CustomPrompt) => {
-    if (promptsLoading) return
-    const current = customPrompts ?? BUILT_IN_PROMPTS
-    await persistPrompts(current.filter(item => item.id !== prompt.id))
   }
 
   const sessionBlank = visibleMessages.length === 0 && session.blank !== false
@@ -1034,7 +941,6 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
                 item.phase === 'active' && sessions.find(row => row.sessionId === item.id)?.running === true) ? colors.primary : undefined}
               onPress={() => { Keyboard.dismiss(); setMentionType(null); setTeamOpen(true) }} />
           )}
-          <IconButton label={zhCN.chat.newChat} icon={OfficialMenuIcons.newChat} dense onPress={() => void startNewSession()} disabled={newSessionPending || busy !== undefined} />
           {!connected && <IconButton label={zhCN.chat.reconnect} icon={RefreshCw} dense onPress={() => void reconnectCurrentSession()} disabled={connectionRetrying} />}
         </>}
       />
@@ -1149,7 +1055,11 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
                   : session.backend === 'claude' ? zhCN.chat.claudeMessageLabel : session.backend === 'opencode' ? zhCN.chat.opencodeMessageLabel : session.backend === 'pi' ? zhCN.chat.piMessageLabel : session.backend === 'antigravity'
                     ? zhCN.chat.antigravityMessageLabel
                     : zhCN.chat.messageLabel}
-              style={[styles.composerInput, compactComposer && { maxHeight: composerInputMaxHeight }]}
+              style={[
+                styles.composerInput,
+                compactComposer && { maxHeight: composerInputMaxHeight },
+                expandedInputHeight !== undefined && { height: expandedInputHeight, maxHeight: expandedInputHeight },
+              ]}
               onChangeText={onChangeText}
               onSelectionChange={onSelectionChange}
 
@@ -1181,17 +1091,6 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
               style={({ pressed }) => [styles.plusButton, pressed && styles.plusPressed, (!connected || permissionSelecting) && styles.plusDisabled]}
             >
               <Plus size={20} color={connected ? colors.ink : colors.disabled} />
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={zhCN.chat.quickPrompts}
-              accessibilityState={{ disabled: !connected || permissionSelecting, expanded: promptsPickerOpen }}
-              disabled={!connected || permissionSelecting}
-              onPress={openPromptsPicker}
-              hitSlop={{ top: 8, bottom: 8 }}
-              style={({ pressed }) => [styles.quickPromptsButton, pressed && styles.plusPressed, (!connected || permissionSelecting) && styles.plusDisabled]}
-            >
-              <Text style={styles.quickPromptsText} numberOfLines={1}>{zhCN.chat.quickPrompts}</Text>
             </Pressable>
             <View style={styles.composerSpacer} />
             {sessionModels !== undefined && (
@@ -1249,19 +1148,6 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
         </View>
         {draft.length > LONG_DRAFT_HINT && (
           <Text style={styles.composerHint}>{zhCN.chat.draftLong(draft.length)}</Text>
-        )}
-        {/* Landscape phones leave almost no space above the IME once the
-            composer is visible; keep the privacy note for roomier windows. */}
-        {!compactComposer && (
-          <Text style={styles.composerHint}>
-            {session.backend === 'codex'
-              ? zhCN.chat.codexPolicyHint
-              : session.backend === 'cursor'
-                ? zhCN.chat.cursorPolicyHint
-                : session.backend === 'claude' ? zhCN.chat.claudePolicyHint : session.backend === 'opencode' ? zhCN.chat.opencodePolicyHint : session.backend === 'pi' ? zhCN.chat.piPolicyHint : session.backend === 'antigravity'
-                  ? zhCN.chat.antigravityPolicyHint
-                  : zhCN.chat.policyHint}
-          </Text>
         )}
         </View>
       </View>
@@ -1407,6 +1293,8 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
           onOpenDevices()
         }}
         onClose={() => setSessionsOpen(false)}
+        onNewSession={createChat}
+        creating={newSessionPending}
         onSelect={async next => {
           if (await openSession(next)) {
             applyDraft('')
@@ -1417,36 +1305,6 @@ export function ChatScreen({ onBack, onOpenDevices, onNewSession, onOpenWorkspac
       />}
       <WorkspacePicker visible={workspacePickerOpen} workspaces={workspaces} currentSessionId={session.sessionId} sessionBackend={session.backend} busy={busy} onClose={() => setWorkspacePickerOpen(false)} onPick={pickWorkspace} onManage={onOpenWorkspaces} />
       <ToolAccessPicker visible={toolPickerOpen} onClose={() => setToolPickerOpen(false)} onPick={pickToolMode} />
-      <PromptsPicker
-        visible={promptsPickerOpen}
-        prompts={customPrompts ?? BUILT_IN_PROMPTS}
-        onClose={() => setPromptsPickerOpen(false)}
-        onPick={prompt => void sendPrompt(prompt)}
-        onManage={() => { setPromptsPickerOpen(false); setPromptsManagerOpen(true) }}
-      />
-      <PromptsManager
-        visible={promptsManagerOpen}
-        prompts={customPrompts ?? BUILT_IN_PROMPTS}
-        promptsLoading={promptsLoading}
-        onBack={() => { setPromptsManagerOpen(false); setPromptsPickerOpen(true) }}
-        onClose={() => setPromptsManagerOpen(false)}
-        onAdd={() => { setPromptsManagerOpen(false); setPromptEditing('new') }}
-        onEdit={prompt => { setPromptsManagerOpen(false); setPromptEditing(prompt) }}
-        onDelete={prompt => {
-          Alert.alert(zhCN.chat.toolPromptDeleteTitle(prompt.title), zhCN.chat.toolPromptDeleteBody, [
-            { text: zhCN.common.cancel, style: 'cancel' },
-            { text: zhCN.common.delete, style: 'destructive', onPress: () => void deletePrompt(prompt) },
-          ])
-        }}
-      />
-      <PromptEditor
-        visible={promptEditing !== null}
-        prompt={promptEditing === 'new' || promptEditing === null ? undefined : promptEditing}
-        promptsLoading={promptsLoading}
-        onBack={() => { setPromptEditing(null); setPromptsManagerOpen(true) }}
-        onClose={() => setPromptEditing(null)}
-        onSave={(title, text) => void savePromptEdit(title, text)}
-      />
     </KeyboardInset></MarkdownLinkProvider>
   )
 }

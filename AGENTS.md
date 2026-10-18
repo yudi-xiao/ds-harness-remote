@@ -635,6 +635,12 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   控制心跳，超过 `max(90s, 4×interval)` 判定半开并主动重建；重连窗口内保持前台服务，
   显式断开/认证失败才停止。新增 `src/state/reconnect-policy.ts` 与 2 个策略测试。OTA
   `05d48ccf-e18d-4f96-9366-651b3e53ec04`（id `01a15076-1ee8-7cb7-b9f5-04e049556c28`）。
+- 聊天界面整理（2026-10-19）：移除底部加密提示、快捷提示词入口与右上角新对话图标；侧边栏
+  顶部新增不绑定工作区的“新对话”（`session.create` 不传 workspaceId），每个工作区分组标题
+  新增 `+` 并在空工作区显示提示。`KeyboardInset` 新增 `useKeyboardInsetState`，IME 可见时
+  输入框扩展到键盘上方可用区域（窗口 - overlap - 顶部安全区 - 标题栏 - composer 预留），
+  IME 关闭恢复常规高度。OTA `fe4bc267-6309-45e0-8ef1-d0d84fa65691`
+  （id `01a1507b-7ef5-7050-8708-24608c12eaed`）。
 - 布局修正：指标行移出标题模糊层到输入框正上方，改为实心胶囊条（`surfaceStrong` + 边框），
   避免浮层文字重叠；标题模糊层为系统状态栏 inset 补 `surface` 实心底色。OTA
   `b5fb2240-0a3f-4fde-a83e-8f693e146270`（id `01a15067-07c5-746a-9b54-288c8a69efd1`）。

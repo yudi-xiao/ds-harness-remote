@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, SectionList, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
-import { Activity, ArrowLeft, Check, ChevronDown, ChevronRight, Code2, Folder, FolderOpen, MessageSquare, Sparkles, RefreshCw } from 'lucide-react-native'
+import { Activity, ArrowLeft, Check, ChevronDown, ChevronRight, Code2, Folder, FolderOpen, MessageSquare, Plus, Sparkles, RefreshCw } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAppStore } from '../state/store'
-import type { RemoteSession } from '../types'
+import type { AgentBackend, RemoteSession } from '../types'
 import { strings } from '../locales/i18n'
 import { IconButton } from '../ui/components'
 import { radius, spacing, type } from '../ui/theme'
@@ -15,10 +15,12 @@ import { loadHostSessionsDrawerGroups, saveHostSessionsDrawerGroup } from '../se
 
 const SESSION_PAGE_SIZE = 3
 
-export function HostSessionsDrawer({ onBack, onClose, onSelect }: {
+export function HostSessionsDrawer({ onBack, onClose, onSelect, onNewSession, creating = false }: {
   onBack: () => void
   onClose: () => void
   onSelect: (session: RemoteSession) => Promise<void>
+  onNewSession: (workspaceId?: string) => Promise<boolean>
+  creating?: boolean
 }) {
   // The store's catalog is scoped to selectedDevice and reset when changing hosts.
   const device = useAppStore(state => state.selectedDevice)
@@ -70,12 +72,13 @@ export function HostSessionsDrawer({ onBack, onClose, onSelect }: {
   const groups = useMemo(() => {
     const archived = new Set(archivedIds)
     const assigned = new Set(workspaces.flatMap(workspace => workspace.sessionIds))
-    const grouped = workspaces.map(workspace => ({
+    const grouped: Array<{ key: string; title: string; backend: AgentBackend; workspaceId?: string; sessions: RemoteSession[] }> = workspaces.map(workspace => ({
       key: `workspace:${workspace.backend ?? 'harness'}:${workspace.workspaceId}`,
       title: workspace.title,
       backend: workspace.backend ?? 'harness',
+      workspaceId: workspace.workspaceId,
       sessions: getVisibleWorkspaceSessions(workspace, sessions, archivedIds).sort((a, b) => b.updatedAt - a.updatedAt),
-    })).filter(group => group.sessions.length > 0)
+    }))
     const unassigned = sessions.filter(session => !archived.has(session.sessionId) && !assigned.has(session.sessionId))
       .sort((a, b) => b.updatedAt - a.updatedAt)
     if (unassigned.length > 0) grouped.push({ key: 'unassigned', title: strings.chat.otherHostSessions, backend: 'harness', sessions: unassigned })
@@ -110,6 +113,22 @@ export function HostSessionsDrawer({ onBack, onClose, onSelect }: {
         </View>
         {error !== undefined && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
         {deviceId !== undefined && storageErrors[deviceId] && <Text style={styles.error} accessibilityRole="alert">{strings.app.secureStorageUnavailable}</Text>}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={strings.chat.newChat}
+          accessibilityState={{ disabled: creating || busy !== undefined || refreshing || !connected }}
+          disabled={creating || busy !== undefined || refreshing || !connected}
+          onPress={() => void onNewSession()}
+          style={({ pressed }) => [styles.newChatRow, pressed && styles.pressedRow, (creating || busy !== undefined || refreshing || !connected) && styles.newChatRowDisabled]}
+        >
+          <View style={styles.newChatIcon}>
+            {creating ? <ActivityIndicator size="small" color={colors.primary} /> : <Plus size={18} color={colors.primary} />}
+          </View>
+          <View style={styles.copy}>
+            <Text style={styles.newChatTitle}>{strings.chat.newChat}</Text>
+            <Text style={styles.newChatHint}>{strings.chat.newChatUnassigned}</Text>
+          </View>
+        </Pressable>
         <SectionList
           sections={groupsReady ? sections : []}
           ListEmptyComponent={groupsReady ? null : <ActivityIndicator style={styles.loading} color={colors.muted} accessibilityLabel={strings.workspaces.loading} />}
@@ -123,6 +142,9 @@ export function HostSessionsDrawer({ onBack, onClose, onSelect }: {
             if (section.key === 'current-work' && section.sessions.length === 0) {
               return <Text style={styles.emptyRunning}>{strings.chat.noCurrentWorkSessions}</Text>
             }
+            if (section.key.startsWith('workspace:') && section.sessions.length === 0) {
+              return <Text style={styles.emptyRunning}>{strings.workspaces.noSessions}</Text>
+            }
             if (section.data.length === section.sessions.length) return null
             return <Pressable
               accessibilityRole="button"
@@ -135,30 +157,49 @@ export function HostSessionsDrawer({ onBack, onClose, onSelect }: {
               <ChevronDown size={16} color={colors.muted} />
             </Pressable>
           }}
-          renderSectionHeader={({ section }) => <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={section.expanded ? strings.workspaces.collapseWorkspace(section.title) : strings.workspaces.expandWorkspace(section.title)}
-            accessibilityState={{ expanded: section.expanded }}
-            onPress={() => toggleGroup(section.key, !section.expanded)}
-            style={({ pressed }) => [styles.group, !section.expanded && styles.collapsedGroup, pressed && styles.pressedRow]}
-          >
-            <View style={styles.workspaceIcon}>
-              {section.key === 'current-work'
-                ? <Activity size={18} color={colors.muted} />
-                : section.backend === 'codex'
-                ? <Code2 size={18} color={colors.muted} />
-                : section.backend !== 'harness'
-                  ? <Sparkles size={18} color={colors.muted} />
-                  : section.expanded ? <FolderOpen size={18} color={colors.muted} /> : <Folder size={18} color={colors.muted} />}
+          renderSectionHeader={({ section }) => {
+            const workspaceId = 'workspaceId' in section ? section.workspaceId : undefined
+            const headerDisabled = creating || busy !== undefined || refreshing || !connected
+            return <View style={styles.groupRow}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={section.expanded ? strings.workspaces.collapseWorkspace(section.title) : strings.workspaces.expandWorkspace(section.title)}
+                accessibilityState={{ expanded: section.expanded }}
+                onPress={() => toggleGroup(section.key, !section.expanded)}
+                style={({ pressed }) => [styles.group, !section.expanded && styles.collapsedGroup, pressed && styles.pressedRow]}
+              >
+                <View style={styles.workspaceIcon}>
+                  {section.key === 'current-work'
+                    ? <Activity size={18} color={colors.muted} />
+                    : section.backend === 'codex'
+                    ? <Code2 size={18} color={colors.muted} />
+                    : section.backend !== 'harness'
+                      ? <Sparkles size={18} color={colors.muted} />
+                      : section.expanded ? <FolderOpen size={18} color={colors.muted} /> : <Folder size={18} color={colors.muted} />}
+                </View>
+                <View style={styles.copy}>
+                  <View style={styles.groupTitleRow}>
+                    <Text style={styles.groupTitle} numberOfLines={1}>{section.title}</Text>
+                    <Text style={styles.count}>{section.key.startsWith('workspace:') ? `${strings.workspaces[section.backend === 'harness' ? 'dsh' : section.backend]} · ` : ''}{section.sessions.length}</Text>
+                  </View>
+                </View>
+                {section.expanded ? <ChevronDown size={16} color={colors.muted} /> : <ChevronRight size={16} color={colors.muted} />}
+              </Pressable>
+              {workspaceId !== undefined && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={strings.chat.newChatInWorkspace(section.title)}
+                  accessibilityState={{ disabled: headerDisabled }}
+                  disabled={headerDisabled}
+                  onPress={() => void onNewSession(workspaceId)}
+                  hitSlop={6}
+                  style={({ pressed }) => [styles.newChatInGroup, pressed && styles.pressedRow]}
+                >
+                  <Plus size={18} color={headerDisabled ? colors.disabled : colors.primary} />
+                </Pressable>
+              )}
             </View>
-            <View style={styles.copy}>
-              <View style={styles.groupTitleRow}>
-                <Text style={styles.groupTitle} numberOfLines={1}>{section.title}</Text>
-                <Text style={styles.count}>{section.key.startsWith('workspace:') ? `${strings.workspaces[section.backend === 'harness' ? 'dsh' : section.backend]} · ` : ''}{section.sessions.length}</Text>
-              </View>
-            </View>
-            {section.expanded ? <ChevronDown size={16} color={colors.muted} /> : <ChevronRight size={16} color={colors.muted} />}
-          </Pressable>}
+          }}
           renderItem={({ item }) => {
             const active = item.sessionId === selected?.sessionId
             const running = lifecycles[item.sessionId]?.running ?? item.running
@@ -197,8 +238,15 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   title: { ...type.heading, color: colors.ink, flex: 1, minWidth: 0, textAlign: 'center', paddingHorizontal: spacing.xs },
   list: { paddingHorizontal: spacing.sm, paddingBottom: spacing.sm },
   loading: { paddingVertical: spacing.xl },
-  group: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xs, paddingHorizontal: spacing.xs, minHeight: 48, marginTop: spacing.xs, borderRadius: radius.sm },
+  newChatRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: 52, marginTop: spacing.xs, marginHorizontal: spacing.sm, paddingHorizontal: spacing.sm, borderRadius: radius.sm },
+  newChatRowDisabled: { opacity: 0.5 },
+  newChatIcon: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  newChatTitle: { ...type.smallStrong, color: colors.ink },
+  newChatHint: { ...type.caption, color: colors.muted, marginTop: 1 },
+  groupRow: { flexDirection: 'row', alignItems: 'center', paddingRight: spacing.xs, marginTop: spacing.xs },
+  group: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xs, paddingHorizontal: spacing.xs, minHeight: 48, borderRadius: radius.sm },
   collapsedGroup: { marginTop: 0 },
+  newChatInGroup: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm },
   workspaceIcon: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
   groupTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   groupTitle: { ...type.smallStrong, color: colors.ink, flex: 1 },

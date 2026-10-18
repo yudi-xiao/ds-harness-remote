@@ -119,7 +119,7 @@ const zhCN = {
     deleteTitle: (title: string) => `删除“${title}”？`, deleteBody: '将从这台设备上删除该工作区及其中的所有对话。此操作无法撤销。', delete: '删除工作区', rename: '重命名', moveUp: '上移', moveDown: '下移', expandWorkspace: (title: string) => `展开工作区“${title}”`, collapseWorkspace: (title: string) => `折叠工作区“${title}”`, newSessionIn: (title: string) => `在“${title}”中新建对话`, deviceDirectory: '电脑上的项目目录', browse: '选择目录', directoryHint: '在这里新建的对话会使用该目录。', codexDirectoryHint: '所选目录会添加到电脑端 CodeX 项目目录。', cursorDirectoryHint: '所选目录会作为 Cursor ACP 会话的工作目录（仅保存在本机连接期间）。', piDirectoryHint: '所选目录会作为 Pi ACP 会话的工作目录（仅保存在本机连接期间）。', antigravityDirectoryHint: '使用所选目录进行 AGY 对话，已有对话从电脑端加载。', opencodeDirectoryHint: '使用所选目录进行 OpenCode 对话，已有对话从电脑端加载。', claudeDirectoryHint: '使用所选目录进行 Claude 对话，已有对话从电脑端加载。', renameTitle: '重命名工作区', namePlaceholder: '输入工作区名称', saveName: '保存', chooseFolder: '选择项目目录', loading: '正在加载…', loadingDirectory: '正在读取目录…', noFolders: '这里没有可选的文件夹', showHidden: '显示隐藏文件夹', hideHidden: '隐藏隐藏文件夹', chooseThisFolder: '使用此目录',
   },
   chat: {
-    contextShort: '上下文', cacheShort: '缓存',
+    contextShort: '上下文', cacheShort: '缓存', newChatUnassigned: '不属于任何工作区', newChatInWorkspace: (title: string) => `在“${title}”中新建对话`,
     currentWorkSessions: '当前工作', noCurrentWorkSessions: '本次远程尚未使用对话',
     otherHostSessions: '其他对话',
     hostSessions: '主机对话', openHostSessions: '打开当前主机的对话列表', noHostSessions: '当前主机暂无对话',
