@@ -635,6 +635,9 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   控制心跳，超过 `max(90s, 4×interval)` 判定半开并主动重建；重连窗口内保持前台服务，
   显式断开/认证失败才停止。新增 `src/state/reconnect-policy.ts` 与 2 个策略测试。OTA
   `05d48ccf-e18d-4f96-9366-651b3e53ec04`（id `01a15076-1ee8-7cb7-b9f5-04e049556c28`）。
+- 回到最新消息（2026-10-19）：会话距底部超过 160dp 时在输入框上方右侧显示圆形向下按钮，
+  点击滚动到底并恢复自动跟随；OTA `89e21218-d66e-4e44-8b54-b02eadf71f52`
+  （id `01a1509c-56ba-7aa6-9aa5-a4df3f5be18a`）。
 - 关于页与侧边栏（2026-10-19）：移除 About 页、GitHub 开源/更新/作者信息与 GitHub release 检查更新；
   侧边栏移除“当前工作”分组，选中会话使用主题蓝底、白色标题/图标。设备列表与登录页底部显示
   `appVersionLabel()` 版本小字。OTA `136979c2-b29b-48c8-a5f7-c884cdffdd13`

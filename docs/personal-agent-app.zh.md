@@ -250,6 +250,12 @@ Android 会话标题下方新增一行紧凑指标，数据全部来自 Host 官
 - 验证：Android check 与 27 文件 / 148 测试通过。
 - OTA：group `136979c2-b29b-48c8-a5f7-c884cdffdd13`，id `01a15088-fb7e-7b8e-af02-cb4c766ea95e`。
 
+## 回到最新消息（2026-10-19）
+
+会话向上滚动查看历史时，输入框上方右侧显示一个圆形向下箭头按钮；点击立即滚动回最新消息并恢复自动跟随。距离底部超过 160dp 才显示，滚回底部后自动隐藏；按钮无障碍标签为“回到最新消息”。
+
+OTA：group `89e21218-d66e-4e44-8b54-b02eadf71f52`，id `01a1509c-56ba-7aa6-9aa5-a4df3f5be18a`；Android check 与 27 文件 / 148 测试通过。
+
 ## 安全与维护
 
 - 不提交：`keystore`、`credentials.json`、`.env`、`.dev.vars`、`.wrangler/`、`.tmp/`、`_scratch/`。

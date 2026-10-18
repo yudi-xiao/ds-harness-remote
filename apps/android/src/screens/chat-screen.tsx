@@ -1,5 +1,6 @@
 import * as ImagePicker from 'expo-image-picker'
 import {
+  ArrowDown,
   ArrowLeft,
   ArrowUp,
   Camera,
@@ -243,6 +244,7 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
   }, [mentionType, session?.sessionId, session?.backend, connection.phase, skillCatalog, workspaceFileRefs])
   const [reconnectingSession, setReconnectingSession] = useState(false)
   const [newSessionPending, setNewSessionPending] = useState(false)
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false)
   const listRef = useRef<FlatList<ChatSection>>(null)
   const lastStreamingScrollAt = useRef(0)
   const scrollFrameRef = useRef<number | null>(null)
@@ -354,6 +356,7 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
   // Entering a session (or switching sessions) should land on the latest turn.
   useEffect(() => {
     setTrajectory(false)
+    setShowJumpToLatest(false)
     pinToBottomRef.current = true
     initialPinRef.current = true
     laidOutSessionRef.current = undefined
@@ -430,7 +433,16 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
     const distanceFromEnd = contentSize.height - layoutMeasurement.height - contentOffset.y
     const atBottom = distanceFromEnd <= 80
     pinToBottomRef.current = atBottom
+    const showJump = !atBottom && distanceFromEnd > 160
+    setShowJumpToLatest(current => current === showJump ? current : showJump)
   }, [])
+
+  const jumpToLatest = () => {
+    setShowJumpToLatest(false)
+    pinToBottomRef.current = true
+    initialPinRef.current = false
+    scheduleScrollToBottom(true)
+  }
 
   // Stable renderItem keeps FlatList rows from re-rendering on every streaming
   // delta; ChatItemView is memoized so only the changing row re-renders.
@@ -1001,6 +1013,19 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
           accessibilityRole="button"
           accessibilityLabel={zhCN.common.close}
         />
+      )}
+      {showJumpToLatest && !trajectory && (
+        <View style={styles.jumpToLatestRow} pointerEvents="box-none">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={zhCN.chat.jumpToLatest}
+            onPress={jumpToLatest}
+            hitSlop={8}
+            style={({ pressed }) => [styles.jumpToLatestButton, pressed && styles.jumpToLatestPressed]}
+          >
+            <ArrowDown size={20} color={colors.primary} />
+          </Pressable>
+        </View>
       )}
       <View style={styles.composerWrap}>
         <View style={[styles.composerInner, readableColumn]}>
