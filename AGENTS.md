@@ -629,6 +629,8 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   缓存指标，不改动 Host 端点或持久化。
 - 本地 Saluki 优化记录见 `docs/personal-agent-app.zh.md`（prompt cache 稳定性、128K 上下文
   与 60% 压缩阈值、输出上限、工具面裁剪、GPU 串行、llama.cpp 参数核对）。
+- 真机确认（2026-10-19）：指标 OTA `01a1505d-…` 已应用，会话标题下方指标行与“对话信息”
+  用量区块显示正常（上下文占用 / 缓存命中 / 权限等级）。
   0.7.0 APK 已构建/安装；真机验收通过（2026-10-19）：关于页显示更新 ID `01a15026-…`（OTA），
   会话内视频卡片点击后成功下载并播放（有声），登录保持、`DSH Remote Agent` 名称与新图标均已确认。
   可选后续：新对话中真实生成一条 H3 视频（含封面），验证 generate_video → workspace 复制 → 卡片播放完整链路。
