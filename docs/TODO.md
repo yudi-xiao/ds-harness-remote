@@ -43,6 +43,7 @@ RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真
 - [ ] 可选：在新对话中真实生成一条 H3 视频（带封面/音频），验证 generate_video → workspace 复制 → 卡片播放的完整链路。
 - [x] 会话标题栏新增上下文占用、缓存命中率与权限等级指标（读取官方 `tokenUsage`/`contextPressure`/`permissions` projections），“对话信息”面板展示上下文构成、Token 用量、累计/本轮缓存命中与当前模型；26 文件 / 146 测试通过。
 - [x] 发布指标 OTA（group `a8174995-e74d-4436-8a96-79e1cf430cd2`，id `01a1505d-8f1d-71a7-aa74-dfa34238b638`），公网 manifest 校验通过。
+- [x] 真机确认指标行显示正常（上下文 / 缓存 / 权限），关于页更新 ID 为 `01a1505d-…`（OTA）。
 - [x] 个人文档新增本地 Saluki 优化建议（prompt cache、context/compaction、输出上限、工具面、GPU 串行、llama.cpp 参数核对）。
 - [ ] 可选：按建议调整 `local-saluki` 的 `maxTokens`/压缩阈值，或在本机会话中验证指标随本地模型实时更新。
 

@@ -197,6 +197,8 @@ Android 会话标题下方新增一行紧凑指标，数据全部来自 Host 官
 
 对应 OTA：group `a8174995-e74d-4436-8a96-79e1cf430cd2`，id `01a1505d-8f1d-71a7-aa74-dfa34238b638`（runtime `0.7.0`，JS-only）；Android check 与 26 文件 / 146 测试通过。
 
+真机确认（2026-10-19）：关于页显示更新 ID `01a1505d-…`（OTA），会话标题下方指标行显示正常（上下文占用 / 缓存命中 / 权限等级），点击可打开用量详情。
+
 ### 当前本机 Saluki 配置
 
 来自 `~/.dsh/profiles/desktop/cordis.patch.yml`：
