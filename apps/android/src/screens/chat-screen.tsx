@@ -817,17 +817,24 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
 
   const pickPermission = (preset: string) => {
     setPermissionPickerOpen(false)
-    const apply = () => void selectPermission(preset)
+    const apply = async () => {
+      const ok = await selectPermission(preset)
+      if (ok) return
+      Alert.alert(
+        zhCN.chat.permissionFailedTitle,
+        useAppStore.getState().error ?? zhCN.chat.permissionFailedBody,
+      )
+    }
     if (preset === 'danger-full-access') {
       Alert.alert(
         session.backend === 'codex' ? zhCN.chat.codexFullAccessTitle : zhCN.chat.fullAccessTitle,
         session.backend === 'codex' ? zhCN.chat.codexFullAccessBody : zhCN.chat.fullAccessBody,
         [
           { text: zhCN.common.cancel, style: 'cancel' },
-          { text: zhCN.chat.enable, style: 'destructive', onPress: apply },
+          { text: zhCN.chat.enable, style: 'destructive', onPress: () => void apply() },
         ],
       )
-    } else apply()
+    } else void apply()
   }
 
   const applyDraft = (next: string) => {
@@ -1063,6 +1070,7 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
         <SessionMetricsBar
           metrics={metrics}
           onPress={() => { Keyboard.dismiss(); setMentionType(null); setSessionInfoOpen(true) }}
+          onPermissionPress={() => { Keyboard.dismiss(); setMentionType(null); setPermissionPickerOpen(true) }}
         />
         <View style={{ position: 'relative', zIndex: 20, elevation: 20 }}>
           {mentionType !== null && (

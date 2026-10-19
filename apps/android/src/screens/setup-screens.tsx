@@ -13,7 +13,7 @@ import { useTheme, type ThemeColors } from '../ui/theme-context'
 import { useResponsiveLayout } from '../ui/responsive'
 import { useThemedStyles } from '../ui/use-themed-styles'
 import { strings as zhCN, type LanguagePreference } from '../locales/i18n'
-import { appVersionLabel } from '../lib/app-version'
+import { VersionFooter } from '../ui/version-footer'
 import type { ThemePreference } from '../ui/theme'
 
 /** Personal DSH Remote Server; a build can override it via EXPO_PUBLIC_DSH_REMOTE_SERVER. */
@@ -107,7 +107,7 @@ export function ServerSetupScreen({ onComplete, onBack }: { onComplete: () => vo
               <Text style={styles.securityBody}>{zhCN.setup.trustBody}</Text>
             </View>
           </View>
-          <Text style={styles.versionText}>{appVersionLabel()}</Text>
+          <VersionFooter />
         </Screen>
       </BlurHeaderFrame>
     </View>

@@ -53,7 +53,9 @@ RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真
 - [x] 移除关于页与 GitHub/作者信息、移除侧边栏“当前工作”分组；选中会话改为蓝色底 + 白色标题；设备列表和登录页底部显示版本号。
 - [x] 发布 About/侧边栏 OTA（group `136979c2-b29b-48c8-a5f7-c884cdffdd13`，id `01a15088-fb7e-7b8e-af02-cb4c766ea95e`），Android check 与 27 文件 / 148 测试通过。
 - [x] 会话查看历史时新增“回到最新消息”圆形按钮：距底部 >160dp 显示，点击滚动到底并恢复自动跟随；滚回底部自动隐藏。
-- [x] 发布回到最新消息 OTA（group `89e21218-d66e-4e44-8b54-b02eadf71f52`，id `01a1509c-56ba-7aa6-9aa5-a4df3f5be18a`），公网 manifest 校验通过。OTA group `b5fb2240-0a3f-4fde-a83e-8f693e146270`（id `01a15067-07c5-746a-9b54-288c8a69efd1`），Android check 与 26 文件 / 146 测试通过。
+- [x] 发布回到最新消息 OTA（group `89e21218-d66e-4e44-8b54-b02eadf71f52`，id `01a1509c-56ba-7aa6-9aa5-a4df3f5be18a`），公网 manifest 校验通过。
+- [x] 版本条显示 OTA/内置包、更新 ID、运行版本与生成时间，点击可查看完整信息并手动检查更新；权限段独立可点击打开当前会话权限选择器，失败显式提示。
+- [x] 发布版本/权限入口 OTA（group `846e26f5-5473-4f12-9d4b-615af4ebcdc3`，id `01a1527b-d381-7d16-92e2-d63546e7569d`），Android check 与 27 文件 / 148 测试通过。OTA group `b5fb2240-0a3f-4fde-a83e-8f693e146270`（id `01a15067-07c5-746a-9b54-288c8a69efd1`），Android check 与 26 文件 / 146 测试通过。
 - [x] 个人文档新增本地 Saluki 优化建议（prompt cache、context/compaction、输出上限、工具面、GPU 串行、llama.cpp 参数核对）。
 - [ ] 可选：按建议调整 `local-saluki` 的 `maxTokens`/压缩阈值，或在本机会话中验证指标随本地模型实时更新。
 

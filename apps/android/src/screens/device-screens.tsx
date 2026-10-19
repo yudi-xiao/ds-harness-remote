@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics'
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, BackHandler, Easing, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Archive, ArrowLeft, ChevronRight, CircleCheck, Code2, Laptop, MessageSquareText, MoreVertical, Pencil, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react-native'
 import { APP_NAME } from '../brand'
-import { appVersionLabel } from '../lib/app-version'
+import { VersionFooter } from '../ui/version-footer'
 import { useAppStore } from '../state/store'
 import type { ConnectionProbeTransport, ConnectionStage, RemoteDevice, RemoteSession, WorkspaceShortcut } from '../types'
 import { workspaceStableKey } from '../lib/workspace-key'
@@ -182,7 +182,7 @@ export function DevicesScreen({ onDevice, onBack, onMore, onShortcut }: {
       {isHome && (
         <View style={styles.homeFooter}>
           <Text style={styles.homeFooterText}>{zhCN.devices.footer}</Text>
-          <Text style={styles.homeVersion}>{appVersionLabel()}</Text>
+          <VersionFooter compact />
         </View>
       )}
     </View>

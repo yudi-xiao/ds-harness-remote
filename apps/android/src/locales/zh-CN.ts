@@ -112,6 +112,13 @@ const zhCN = {
   sessions: { archive: '归档对话', archiveTitle: '归档这段对话？', archiveBody: '归档后，这段对话会从工作区列表中隐藏。', untitled: '新对话', child: '子任务对话' },
   time: { unavailable: '更新时间不可用', lastSeenUnavailable: '活跃时间不可用', lastActive: (value: string) => `${value}活跃`, now: '刚刚', justNow: '刚刚更新', minutesAgo: (n: number) => `${n} 分钟前`, hoursAgo: (n: number) => `${n} 小时前`, updatedSuffix: '更新', locale: 'zh-CN' },
   transport: { auto: '自动（推荐）', autoDescription: '优先尝试 P2P 直连，必要时自动改用 TURN 或服务器转发', turn: 'TURN 优先', turnDescription: '网络受限时，优先使用 TURN 转发以提高稳定性', relay: '仅服务器转发', relayDescription: '所有数据都通过 DSH Remote 服务器转发' },
+  version: {
+    title: '版本与更新', appVersion: '版本', runtime: '运行版本', channel: '更新通道', source: 'Bundle 来源',
+    embedded: '内置包', ota: 'OTA 更新', updateId: '更新 ID', embeddedId: '内置包无更新 ID', updatedAt: '更新时间',
+    check: '检查更新', checking: '正在检查…', upToDate: '当前已是最新版本。', downloadedTitle: '更新已下载',
+    downloadedBody: '重启 App 后生效。', restart: '立即重启', checkFailed: '检查更新失败', checkFailedBody: '请检查网络后重试。',
+    disabled: '当前构建未启用 OTA 更新。', disabledShort: '未启用', accessibility: '版本与更新信息',
+  },
   workspaces: {
     title: '工作区', create: '新建工作区', type: '工作区类型', dsh: 'DSH', deviceTitle: (name: string) => name, deviceInfo: '设备与连接信息',
     deviceSubtitle: (name: string, status: string) => `${name} · ${status}`, noDevice: '未连接设备',
@@ -119,7 +126,7 @@ const zhCN = {
     deleteTitle: (title: string) => `删除“${title}”？`, deleteBody: '将从这台设备上删除该工作区及其中的所有对话。此操作无法撤销。', delete: '删除工作区', rename: '重命名', moveUp: '上移', moveDown: '下移', expandWorkspace: (title: string) => `展开工作区“${title}”`, collapseWorkspace: (title: string) => `折叠工作区“${title}”`, newSessionIn: (title: string) => `在“${title}”中新建对话`, deviceDirectory: '电脑上的项目目录', browse: '选择目录', directoryHint: '在这里新建的对话会使用该目录。', codexDirectoryHint: '所选目录会添加到电脑端 CodeX 项目目录。', cursorDirectoryHint: '所选目录会作为 Cursor ACP 会话的工作目录（仅保存在本机连接期间）。', piDirectoryHint: '所选目录会作为 Pi ACP 会话的工作目录（仅保存在本机连接期间）。', antigravityDirectoryHint: '使用所选目录进行 AGY 对话，已有对话从电脑端加载。', opencodeDirectoryHint: '使用所选目录进行 OpenCode 对话，已有对话从电脑端加载。', claudeDirectoryHint: '使用所选目录进行 Claude 对话，已有对话从电脑端加载。', renameTitle: '重命名工作区', namePlaceholder: '输入工作区名称', saveName: '保存', chooseFolder: '选择项目目录', loading: '正在加载…', loadingDirectory: '正在读取目录…', noFolders: '这里没有可选的文件夹', showHidden: '显示隐藏文件夹', hideHidden: '隐藏隐藏文件夹', chooseThisFolder: '使用此目录',
   },
   chat: {
-    contextShort: '上下文', cacheShort: '缓存', newChatUnassigned: '不属于任何工作区', newChatInWorkspace: (title: string) => `在“${title}”中新建对话`, jumpToLatest: '回到最新消息',
+    contextShort: '上下文', cacheShort: '缓存', newChatUnassigned: '不属于任何工作区', newChatInWorkspace: (title: string) => `在“${title}”中新建对话`, jumpToLatest: '回到最新消息', permissionFailedTitle: '权限切换失败', permissionFailedBody: 'Host 没有确认新的权限设置。请重试或检查 Host 插件版本。',
     currentWorkSessions: '当前工作', noCurrentWorkSessions: '本次远程尚未使用对话',
     otherHostSessions: '其他对话',
     hostSessions: '主机对话', openHostSessions: '打开当前主机的对话列表', noHostSessions: '当前主机暂无对话',

@@ -114,6 +114,13 @@ const enUS = {
   sessions: { archive: 'Archive conversation', archiveTitle: 'Archive this conversation?', archiveBody: 'The conversation will be hidden from workspace lists.', untitled: 'New conversation', child: 'Subtask conversation' },
   time: { unavailable: 'Update time unavailable', lastSeenUnavailable: 'Active time unavailable', lastActive: (value: string) => `Active ${value}`, now: 'just now', justNow: 'Updated just now', minutesAgo: (n: number) => `${n} min ago`, hoursAgo: (n: number) => `${n} hr ago`, updatedSuffix: '', locale: 'en-US' },
   transport: { auto: 'Automatic (recommended)', autoDescription: 'Tries direct P2P first, then TURN or the server relay when needed', turn: 'Prefer TURN', turnDescription: 'Prioritizes TURN relay for stability on restricted networks', relay: 'Server relay only', relayDescription: 'Routes all data through the DSH Remote server relay' },
+  version: {
+    title: 'Version & updates', appVersion: 'Version', runtime: 'Runtime version', channel: 'Update channel', source: 'Bundle source',
+    embedded: 'Embedded', ota: 'OTA update', updateId: 'Update ID', embeddedId: 'Embedded bundle has no update ID', updatedAt: 'Updated at',
+    check: 'Check for updates', checking: 'Checking…', upToDate: 'You are already on the latest version.', downloadedTitle: 'Update downloaded',
+    downloadedBody: 'Restart the app to apply it.', restart: 'Restart now', checkFailed: 'Update check failed', checkFailedBody: 'Check your connection and retry.',
+    disabled: 'OTA updates are not enabled in this build.', disabledShort: 'Not enabled', accessibility: 'Version and update information',
+  },
   workspaces: {
     title: 'Workspaces', create: 'New workspace', type: 'Workspace type', dsh: 'DSH', deviceTitle: (name: string) => name, deviceInfo: 'Device and connection information',
     deviceSubtitle: (name: string, status: string) => `${name} · ${status}`, noDevice: 'No device connected',
@@ -121,7 +128,7 @@ const enUS = {
     deleteTitle: (title: string) => `Delete “${title}”?`, deleteBody: 'This removes the workspace and all of its conversations from this device. This cannot be undone.', delete: 'Delete workspace', rename: 'Rename', moveUp: 'Move up', moveDown: 'Move down', expandWorkspace: (title: string) => `Expand workspace “${title}”`, collapseWorkspace: (title: string) => `Collapse workspace “${title}”`, newSessionIn: (title: string) => `New conversation in “${title}”`, deviceDirectory: 'Project directory on computer', browse: 'Choose directory', directoryHint: 'Conversations created here will use this directory.', codexDirectoryHint: 'The selected directory will be added to the CodeX project catalog on the computer.', cursorDirectoryHint: 'The selected directory becomes the Cursor ACP session cwd (kept only for this phone connection).', piDirectoryHint: 'The selected directory becomes the Pi ACP session cwd (kept only for this phone connection).', antigravityDirectoryHint: 'Use this directory for AGY conversations. Existing conversations are loaded from the computer.', opencodeDirectoryHint: 'Use this directory for OpenCode conversations. Existing conversations are loaded from the computer.', claudeDirectoryHint: 'Use this directory for Claude conversations. Existing conversations are loaded from the computer.', renameTitle: 'Rename workspace', namePlaceholder: 'Enter a workspace name', saveName: 'Save', chooseFolder: 'Choose project directory', loading: 'Loading…', loadingDirectory: 'Reading directory…', noFolders: 'No folders are available here', showHidden: 'Show hidden folders', hideHidden: 'Hide hidden folders', chooseThisFolder: 'Use this directory',
   },
   chat: {
-    contextShort: 'Context', cacheShort: 'Cache', newChatUnassigned: 'Not linked to a workspace', newChatInWorkspace: (title: string) => `New chat in “${title}”`, jumpToLatest: 'Jump to latest',
+    contextShort: 'Context', cacheShort: 'Cache', newChatUnassigned: 'Not linked to a workspace', newChatInWorkspace: (title: string) => `New chat in “${title}”`, jumpToLatest: 'Jump to latest', permissionFailedTitle: 'Could not change permission', permissionFailedBody: 'The Host did not confirm the new permission preset. Retry or check the Host plugin version.',
     currentWorkSessions: 'Current work', noCurrentWorkSessions: 'No conversations used in this remote connection yet',
     otherHostSessions: 'Other conversations',
     hostSessions: 'Host conversations', openHostSessions: 'Open conversations on this host', noHostSessions: 'No conversations on this host yet',
