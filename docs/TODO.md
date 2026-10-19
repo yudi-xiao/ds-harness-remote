@@ -57,7 +57,8 @@ RC.1 的源码适配与本地自动化验证见兼容性说明；不能替代真
 - [x] 发布回到最新消息 OTA（group `89e21218-d66e-4e44-8b54-b02eadf71f52`，id `01a1509c-56ba-7aa6-9aa5-a4df3f5be18a`），公网 manifest 校验通过。
 - [x] 版本条显示 OTA/内置包、更新 ID、运行版本与生成时间，点击可查看完整信息并手动检查更新；权限段独立可点击打开当前会话权限选择器，失败显式提示。
 - [x] 发布版本/权限入口 OTA（group `846e26f5-5473-4f12-9d4b-615af4ebcdc3`，id `01a1527b-d381-7d16-92e2-d63546e7569d`），Android check 与 27 文件 / 148 测试通过。
-- [x] 会话模型选择按设备记住，新建对话打开前应用上次模型；模型选择期间禁用发送，失败弹窗；发布 OTA（group `88a7218b-5929-4e92-bf4a-b7cd8a759b76`，id `01a152d6-ec5a-73ef-91c2-6c31368c3b60`）。OTA group `b5fb2240-0a3f-4fde-a83e-8f693e146270`（id `01a15067-07c5-746a-9b54-288c8a69efd1`），Android check 与 26 文件 / 146 测试通过。
+- [x] 会话模型选择按设备记住，新建对话打开前应用上次模型；模型选择期间禁用发送，失败弹窗；发布 OTA（group `88a7218b-5929-4e92-bf4a-b7cd8a759b76`，id `01a152d6-ec5a-73ef-91c2-6c31368c3b60`）。
+- [x] 将 `feat/cloudflare-workers-do` 推送到私人 fork；主页增加插件 tgz 下载，清理 GitHub/作者/Issue 链接；构建并部署 Worker（Version ID `30aa4d6d-a823-4711-8792-069be3f9d7da`），线上主页与下载校验通过。OTA group `b5fb2240-0a3f-4fde-a83e-8f693e146270`（id `01a15067-07c5-746a-9b54-288c8a69efd1`），Android check 与 26 文件 / 146 测试通过。
 - [x] 个人文档新增本地 Saluki 优化建议（prompt cache、context/compaction、输出上限、工具面、GPU 串行、llama.cpp 参数核对）。
 - [ ] 可选：按建议调整 `local-saluki` 的 `maxTokens`/压缩阈值，或在本机会话中验证指标随本地模型实时更新。
 

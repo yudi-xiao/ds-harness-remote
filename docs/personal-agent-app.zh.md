@@ -271,6 +271,13 @@ OTA：group `89e21218-d66e-4e44-8b54-b02eadf71f52`，id `01a1509c-56ba-7aa6-9aa5
 - 验证：Android check 与 27 文件 / 148 测试通过。
 - OTA：group `88a7218b-5929-4e92-bf4a-b7cd8a759b76`，id `01a152d6-ec5a-73ef-91c2-6c31368c3b60`。
 
+## 插件安装包与个人 Server 主页（2026-10-19）
+
+- `feat/cloudflare-workers-do` 已推送到私人 fork（包含当前全部本地提交）；如新机器从仓库安装，需要显式使用该分支或安装主页提供的 tgz。
+- 个人 Server 主页新增插件安装包下载：`https://remote-dsh.howlearnwood.com/downloads/ds-harness-remote-0.5.12.tgz`，文件为 `pnpm pack` 产物（含 `index.js`、`packages/plugin/dist/*.js`、`dsh-plugin.json`、`cordis.patch.yml` 等），SHA-256 `7FC9FDED…D88A648AFE4`。
+- 主页移除 GitHub 仓库入口、GitHub 页头链接、作者署名和 GitHub Issue 内测链接；移除登录页/设备页的 GitHub 链接。安装面板改为“下载插件安装包 / DSH 桌面版插件管理器安装 / 命令行 URL 安装”，版本显示 `v0.5.12`。
+- 已构建并部署 Worker `dsh-remote-server`：Version ID `30aa4d6d-a823-4711-8792-069be3f9d7da`；线上 `/` 与 tgz 下载均返回 200，下载文件 444,232 bytes、SHA-256 与主页一致。
+
 ## 安全与维护
 
 - 不提交：`keystore`、`credentials.json`、`.env`、`.dev.vars`、`.wrangler/`、`.tmp/`、`_scratch/`。
