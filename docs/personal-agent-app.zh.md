@@ -263,6 +263,14 @@ OTA：group `89e21218-d66e-4e44-8b54-b02eadf71f52`，id `01a1509c-56ba-7aa6-9aa5
 - 验证：Android check 与 27 文件 / 148 测试通过。
 - OTA：group `846e26f5-5473-4f12-9d4b-615af4ebcdc3`，id `01a1527b-d381-7d16-92e2-d63546e7569d`。
 
+## 模型选择持久化与确认（2026-10-19）
+
+- 在会话中选择的模型会按设备记住（`preferred-model`）；新建对话时在打开会话前向 Host 应用上次选择的模型，避免新会话悄悄回退到 DeepSeek 默认模型。
+- 选择模型期间禁用发送按钮，防止“先选模型、立刻发消息”时首条消息仍使用旧模型；模型切换失败会弹窗显示 Host 返回的错误，不再静默。
+- 选择模型仍使用官方 `session/selectModel`（Session-local，由 Host 回读确认），不会修改其他会话的模型。
+- 验证：Android check 与 27 文件 / 148 测试通过。
+- OTA：group `88a7218b-5929-4e92-bf4a-b7cd8a759b76`，id `01a152d6-ec5a-73ef-91c2-6c31368c3b60`。
+
 ## 安全与维护
 
 - 不提交：`keystore`、`credentials.json`、`.env`、`.dev.vars`、`.wrangler/`、`.tmp/`、`_scratch/`。

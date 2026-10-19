@@ -571,7 +571,7 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
   if (session === undefined) return null
 
   const submit = async () => {
-    if (!connected || permissionSelecting) return
+    if (!connected || permissionSelecting || modelSelecting) return
     // Read the live ref: the render-closure `draft` can lag the last keystrokes
     // typed right before the tap, silently dropping the tail of the message.
     const submittedDraft = draftRef.current
@@ -701,11 +701,17 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
 
   const pickModel = async (group: ModelProviderGroup, model: ModelCatalogModel, reasoningEffort?: string) => {
     setModelPickerOpen(false)
-    await selectModel({
+    const applied = await selectModel({
       provider: group.id,
       model: model.id,
       ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
     })
+    if (!applied) {
+      Alert.alert(
+        zhCN.chat.modelFailedTitle,
+        useAppStore.getState().error ?? zhCN.chat.modelFailedBody,
+      )
+    }
   }
 
   const reconnectCurrentSession = async () => {
@@ -1177,10 +1183,10 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={zhCN.chat.send}
-                  accessibilityState={{ disabled: !connected || permissionSelecting || (draft.trim().length === 0 && images.length === 0) }}
-                  disabled={!connected || permissionSelecting || (draft.trim().length === 0 && images.length === 0)}
+                  accessibilityState={{ disabled: !connected || permissionSelecting || modelSelecting || (draft.trim().length === 0 && images.length === 0) }}
+                  disabled={!connected || permissionSelecting || modelSelecting || (draft.trim().length === 0 && images.length === 0)}
                   onPress={() => void submit()}
-                  style={({ pressed }) => [styles.sendButton, pressed && styles.sendPressed, (!connected || permissionSelecting || (draft.trim().length === 0 && images.length === 0)) && styles.sendDisabled]}
+                  style={({ pressed }) => [styles.sendButton, pressed && styles.sendPressed, (!connected || permissionSelecting || modelSelecting || (draft.trim().length === 0 && images.length === 0)) && styles.sendDisabled]}
                 >
                   <ArrowUp size={20} color={colors.white} />
                 </Pressable>

@@ -27,6 +27,7 @@ import { readOpencodeHistory, selectOpencodeModel } from '../services/opencode'
 import { readClaudeHistory, selectClaudeModel } from '../services/claude'
 import { readPiHistory, selectPiModel } from '../services/pi'
 import { saveCodexPermissionPreset } from '../services/storage'
+import { loadPreferredModel, savePreferredModel } from '../services/storage'
 import type { RemoteSession } from '../types'
 import { loadSavedCodexPermissions, withBestCodexPermission, withCodexPermissionState } from './codex-session-state'
 import { foldHistory, settleTurnItems } from './event-reducer'
@@ -495,6 +496,19 @@ export function createSessionActions({ get, set, runtime }: SessionAccess): Pick
         const proxy = runtime.connection.requireProxy()
         const { sessionId } = await proxy.sessionCreate(workspaceId)
         if (generation !== runtime.connectionGeneration) return false
+        // A model explicitly chosen in a previous conversation is the user's
+        // current preference. Apply it to a new session before it is opened, so
+        // the first prompt cannot fall back to the deployment default.
+        const preferredDeviceId = get().selectedDevice?.deviceId
+        const preferredModel = preferredDeviceId === undefined ? undefined : await loadPreferredModel(preferredDeviceId)
+        if (preferredModel !== undefined) {
+          try {
+            await proxy.sessionSelectModel(sessionId, preferredModel)
+          } catch {
+            // The Host may no longer expose that provider; keep the session's default.
+          }
+          if (generation !== runtime.connectionGeneration) return false
+        }
         if (defaultPermission !== 'default') {
           await proxy.sessionSelectPermission(sessionId, defaultPermission)
           if (generation !== runtime.connectionGeneration) return false
@@ -631,6 +645,12 @@ export function createSessionActions({ get, set, runtime }: SessionAccess): Pick
           return true
         }
         const selected = await runtime.connection.requireProxy().sessionSelectModel(session.sessionId, selection)
+        const preferredDeviceId = get().selectedDevice?.deviceId
+        if (preferredDeviceId !== undefined) {
+          // Remember the choice for the next new conversation. Storage is a
+          // convenience: a failed write must not fail the model switch.
+          void savePreferredModel(preferredDeviceId, selected).catch(() => undefined)
+        }
         set(state => ({
           sessionModels: state.sessionModels === undefined ? undefined : { ...state.sessionModels, current: selected },
           modelSelecting: false,

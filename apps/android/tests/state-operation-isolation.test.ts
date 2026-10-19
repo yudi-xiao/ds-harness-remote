@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
     'loadTrustedHosts', 'forgetHost', 'clearCodexPermissionPresets', 'clearDeviceCredentials',
     'saveServerConfig', 'clearLocalData', 'loadOrCreateIdentity', 'saveLanguagePreference',
     'saveThemePreference', 'saveDefaultPermissionPreset', 'saveFavoriteWorkspaces',
-    'saveRecentWorkspaces', 'loadCodexPermissionPresets',
+    'saveRecentWorkspaces', 'loadCodexPermissionPresets', 'loadPreferredModel', 'savePreferredModel',
   ].map(name => [name, vi.fn()])),
   createCodex: vi.fn(), loadCodex: vi.fn(), loadAgy: vi.fn(), loadPi: vi.fn(), loadOpencode: vi.fn(),
 }))

@@ -635,6 +635,9 @@ bundle 已包含 `session/attachment` 与个人 Server 预填。EAS 云构建已
   控制心跳，超过 `max(90s, 4×interval)` 判定半开并主动重建；重连窗口内保持前台服务，
   显式断开/认证失败才停止。新增 `src/state/reconnect-policy.ts` 与 2 个策略测试。OTA
   `05d48ccf-e18d-4f96-9366-651b3e53ec04`（id `01a15076-1ee8-7cb7-b9f5-04e049556c28`）。
+- 模型选择（2026-10-19）：按设备记住上次 Harness 模型（`preferred-model`），新建对话打开前
+  通过官方 `session/selectModel` 应用；选择期间禁用发送，失败弹窗。OTA
+  `88a7218b-5929-4e92-bf4a-b7cd8a759b76`（id `01a152d6-ec5a-73ef-91c2-6c31368c3b60`）。
 - 版本/OTA 状态（2026-10-19）：设备列表与登录页版本条显示 `vX (build) · 内置包/OTA xxxx`
   与运行版本/生成时间，点击可看完整信息并手动检查更新（`expo-updates`）；会话指标权限段
   独立可点击打开当前会话权限选择器，失败弹窗。OTA

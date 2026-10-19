@@ -9,7 +9,7 @@ import type { Messages } from '../locales/types'
 import enUS from '../locales/en-US'
 import zhCN from '../locales/zh-CN'
 import { isThemePreference, type ThemePreference } from '../ui/theme'
-import type { AgentBackend, CodexPermissionPreset, DefaultPermissionPreset, DeviceCredentials, DeviceIdentity, RemoteDevice, ServerConfig, WorkspaceShortcut } from '../types'
+import type { AgentBackend, CodexPermissionPreset, DefaultPermissionPreset, DeviceCredentials, DeviceIdentity, ModelSelection, RemoteDevice, ServerConfig, WorkspaceShortcut } from '../types'
 
 const KEYS = {
   config: 'dshremote.server.v1',
@@ -29,6 +29,7 @@ const KEYS = {
   favoriteWorkspaces: 'dshremote.favorite-workspaces.v1',
   recentWorkspaces: 'dshremote.recent-workspaces.v1',
   customPrompts: 'dshremote.custom-prompts.v1',
+  preferredModels: 'dshremote.preferred-models.v1',
 } as const
 
 const secureOptions: SecureStore.SecureStoreOptions = {
@@ -284,6 +285,17 @@ export async function clearLocalData(): Promise<void> {
   await Promise.all(Object.values(KEYS).map(key => SecureStore.deleteItemAsync(key, secureOptions)))
 }
 
+export async function loadPreferredModel(deviceId: string): Promise<ModelSelection | undefined> {
+  const models = await readJson<Record<string, unknown>>(KEYS.preferredModels)
+  const value = models?.[deviceId]
+  return modelSelection(value)
+}
+
+export async function savePreferredModel(deviceId: string, selection: ModelSelection): Promise<void> {
+  const models = await readJson<Record<string, unknown>>(KEYS.preferredModels) ?? {}
+  await writeJson(KEYS.preferredModels, { ...models, [deviceId]: selection })
+}
+
 async function readJson<T>(key: string): Promise<T | undefined> {
   const value = await SecureStore.getItemAsync(key, secureOptions)
   if (value === null) return undefined
@@ -301,6 +313,15 @@ async function writeJson(key: string, value: unknown): Promise<void> {
 
 function codexPermissionPreset(value: unknown): CodexPermissionPreset | undefined {
   return value === 'workspace-write' || value === 'danger-full-access' ? value : undefined
+}
+
+function modelSelection(value: unknown): ModelSelection | undefined {
+  if (!isRecord(value) || typeof value.provider !== 'string' || typeof value.model !== 'string') return undefined
+  return {
+    provider: value.provider,
+    model: value.model,
+    ...(typeof value.reasoningEffort === 'string' ? { reasoningEffort: value.reasoningEffort } : {}),
+  }
 }
 
 function workspaceShortcut(value: unknown): WorkspaceShortcut | undefined {
