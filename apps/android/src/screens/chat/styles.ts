@@ -147,8 +147,10 @@ export function createStyles(colors: ThemeColors) {
     welcomeBadgeText: { fontSize: 11, fontWeight: '600', color: colors.muted },
     mentionBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.menuDismiss },
     composerWrap: { backgroundColor: colors.background, paddingHorizontal: spacing.sm, paddingTop: spacing.sm, paddingBottom: spacing.xs },
-    jumpToLatestRow: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: spacing.lg, paddingBottom: spacing.xs },
-    jumpToLatestButton: {
+    jumpToLatestFloating: {
+      position: 'absolute',
+      right: spacing.lg,
+      zIndex: 20,
       width: 40,
       height: 40,
       borderRadius: radius.pill,
@@ -161,7 +163,7 @@ export function createStyles(colors: ThemeColors) {
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.16,
       shadowRadius: 6,
-      elevation: 4,
+      elevation: 6,
     },
     jumpToLatestPressed: { opacity: 0.65 },
     composerInner: { width: '100%' },

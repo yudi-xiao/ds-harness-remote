@@ -245,6 +245,7 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
   const [reconnectingSession, setReconnectingSession] = useState(false)
   const [newSessionPending, setNewSessionPending] = useState(false)
   const [showJumpToLatest, setShowJumpToLatest] = useState(false)
+  const [composerHeight, setComposerHeight] = useState(0)
   const listRef = useRef<FlatList<ChatSection>>(null)
   const lastStreamingScrollAt = useRef(0)
   const scrollFrameRef = useRef<number | null>(null)
@@ -1021,20 +1022,28 @@ export function ChatScreen({ onBack, onOpenDevices, onOpenWorkspaces }: { onBack
           accessibilityLabel={zhCN.common.close}
         />
       )}
-      {showJumpToLatest && !trajectory && (
-        <View style={styles.jumpToLatestRow} pointerEvents="box-none">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={zhCN.chat.jumpToLatest}
-            onPress={jumpToLatest}
-            hitSlop={8}
-            style={({ pressed }) => [styles.jumpToLatestButton, pressed && styles.jumpToLatestPressed]}
-          >
-            <ArrowDown size={20} color={colors.primary} />
-          </Pressable>
-        </View>
+      {showJumpToLatest && !trajectory && !keyboard.visible && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={zhCN.chat.jumpToLatest}
+          onPress={jumpToLatest}
+          hitSlop={8}
+          style={({ pressed }) => [
+            styles.jumpToLatestFloating,
+            { bottom: composerHeight + (keyboard.visible ? keyboard.overlap : insets.bottom) + spacing.xs },
+            pressed && styles.jumpToLatestPressed,
+          ]}
+        >
+          <ArrowDown size={20} color={colors.primary} />
+        </Pressable>
       )}
-      <View style={styles.composerWrap}>
+      <View
+        style={styles.composerWrap}
+        onLayout={event => {
+          const next = Math.round(event.nativeEvent.layout.height)
+          setComposerHeight(current => current === next ? current : next)
+        }}
+      >
         <View style={[styles.composerInner, readableColumn]}>
         {queueItems.length > 0 && <QueueDock items={queueItems} />}
 
